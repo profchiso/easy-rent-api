@@ -20,7 +20,7 @@ const userSchema = new mongoose.Schema({
 		required: ['true', 'Please provide a valid address']
 	},
 	phone: {
-		type: Number,
+		type: String,
 		required: ['true', 'Please provide a valid  mobile number'],
 		min: ['11', 'Mobile number must be 11 digit']
 	},

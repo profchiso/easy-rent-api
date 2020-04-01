@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const validator = require('express-validator');
 const Appartment = require('../../models/Appartment');
 
 // get all appartments

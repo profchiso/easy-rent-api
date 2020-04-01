@@ -1,12 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const { check, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
+const gravatar = require('gravatar');
+const bcrypt = require('bcryptjs');
 const User = require('../../models/Users');
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // get all users
 router.get('/', async (req, res) => {
-	console.log('get all users route');
-	console.log(req.params);
-	console.log(req.query);
 	res.status(200).json({
 		status: 'success',
 		result: 1,
@@ -16,7 +19,6 @@ router.get('/', async (req, res) => {
 
 //get single user
 router.get('/:id', async (req, res) => {
-	console.log('get a users route');
 	res.status(200).json({
 		status: 'success',
 		result: 1,
@@ -25,19 +27,74 @@ router.get('/:id', async (req, res) => {
 });
 
 //register a user
-router.post('/', async (req, res) => {
-	console.log('add users route');
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'add a user route'
-	});
-});
+router.post(
+	'/',
+	[
+		check('name', 'Name  is requird')
+			.not()
+			.notEmpty(),
+		check('email', 'Email is required')
+			.isEmail()
+			.notEmpty(),
+		check('password', 'Password required').notEmpty(),
+		check('address', 'Address required ').notEmpty(),
+		check('phone', 'Phone number required')
+			.not()
+			.notEmpty()
+	],
+	async (req, res) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ errors: errors.array() });
+		}
+		try {
+			const { email, password } = req.body;
+			// const user = await User.findOne({ email });
+			// if (user) {
+			// 	return res.status(400).json({
+			// 		status: 'failed',
+			// 		message: 'user already exist!'
+			// 	});
+			// }
+			const avatar = gravatar.url(email, {
+				s: '200',
+				r: 'pg',
+				d: 'mm'
+			});
+			const userData = req.body;
+			userData.avatar = avatar;
+
+			const salt = await bcrypt.genSalt(10);
+			userData.password = await bcrypt.hash(password, salt);
+
+			const createUser = await User.create(userData);
+
+			const payLoad = {
+				user: {
+					id: createUser.id
+				}
+			};
+			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
+				if (error) throw error;
+				res.status(201).json({
+					status: 'success',
+					result: 1,
+					data: createUser,
+					token
+				});
+			});
+		} catch (error) {
+			console.log(error);
+			res.status(500).json({
+				status: 'failed',
+				error
+			});
+		}
+	}
+);
 
 //modify user accout
 router.patch('/:id', async (req, res) => {
-	console.log('modify user accout route');
-
 	res.status(200).json({
 		status: 'success',
 		result: 1,
@@ -47,7 +104,6 @@ router.patch('/:id', async (req, res) => {
 
 //delete a user
 router.delete('/:id', async (req, res) => {
-	console.log('delete user accout route');
 	res.status(200).json({
 		status: 'success',
 		result: 1,
