@@ -5,11 +5,12 @@ const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const User = require('../../models/Users');
+const authorize = require('../../middlewares/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // get all users
-router.get('/', async (req, res) => {
+router.get('/', authorize, async (req, res) => {
 	res.status(200).json({
 		status: 'success',
 		result: 1,
@@ -18,12 +19,31 @@ router.get('/', async (req, res) => {
 });
 
 //get single user
-router.get('/:id', async (req, res) => {
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'get a user route'
-	});
+router.get('/:id', authorize, async (req, res) => {
+	console.log(req.params);
+	const { id } = req.params.id;
+	try {
+		if (id) {
+			const user = await User.findById(id);
+			if (!user) {
+				return res.status(404).json({
+					status: 'failed',
+					message: `User with the id ${id} does not exist`
+				});
+			}
+			res.status(200).json({
+				status: 'success',
+				result: 1,
+				data: user
+			});
+		}
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({
+			ststus: 'failed',
+			error
+		});
+	}
 });
 
 //register a user
@@ -45,7 +65,7 @@ router.post(
 	async (req, res) => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
-			return res.status(400).json({ errors: errors.array() });
+			return res.status(400).json({ status: 'Failed', errors: errors.array() });
 		}
 		try {
 			const { email, password } = req.body;
@@ -94,7 +114,7 @@ router.post(
 );
 
 //modify user accout
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authorize, async (req, res) => {
 	res.status(200).json({
 		status: 'success',
 		result: 1,
@@ -103,7 +123,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 //delete a user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authorize, async (req, res) => {
 	res.status(200).json({
 		status: 'success',
 		result: 1,
