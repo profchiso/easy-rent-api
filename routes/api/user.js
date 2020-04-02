@@ -148,7 +148,14 @@ router.post(
 			// const salt = await bcrypt.genSalt(10);
 			// userData.password = await bcrypt.hash(password, salt);
 
-			const createUser = await User.create(userData);
+			const createUser = await User.create({
+				name: userData.name,
+				email: userData.email,
+				avatar: userData.avatar,
+				password: userData.password,
+				address: userData.address,
+				phone: userData.phone
+			});
 			const payLoad = {
 				user: {
 					id: createUser.id
