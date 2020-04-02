@@ -1,41 +1,79 @@
 const express = require('express');
 const router = express.Router();
-const validator = require('express-validator');
+const { check, validationResult } = require('express-validator');
 const Appartment = require('../../models/Appartment');
+const User = require('../../models/Users');
 const authorize = require('../../middlewares/auth');
 
 // get all appartments
 router.get('/', async (req, res) => {
-	console.log('get all appartments route');
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'appartment home route'
-	});
+	try {
+		let appartments = await Appartment.find();
+
+		res.status(200).json({
+			status: 'success',
+			result: appartments.length,
+			data: appartments
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(500).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 //get single appartment
 router.get('/:id', async (req, res) => {
-	console.log('get single appartments route');
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'get an appartment route'
-	});
+	try {
+		let appartment = await Appartment.findById(req.params.id);
+
+		if (!appartment) {
+			return res.status(404).json({
+				status: 'Failed',
+				result: 0,
+				message: `No result for the id ${req.params.id}`
+			});
+		}
+
+		res.status(200).json({
+			status: 'success',
+			result: appartment.length,
+			data: appartment
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 //get all appartment belonging to one user
 router.get('/user-appartments/:userID', authorize, async (req, res) => {
-	console.log('get all appartment belonging to one user route');
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'get all appartment for a user route'
-	});
+	try {
+		let userAppartments = await Appartment.find({
+			'user.id': req.params.userID
+		});
+
+		res.status(200).json({
+			status: 'success',
+			result: userAppartments.length,
+			data: userAppartments
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 //add an appartment
-router.post('/', authorize, async (req, res) => {
+router.post('/', [], authorize, async (req, res) => {
 	console.log('add appartments route');
 	res.status(200).json({
 		status: 'success',
@@ -46,23 +84,43 @@ router.post('/', authorize, async (req, res) => {
 
 //modify an appartment
 router.patch('/:id', authorize, async (req, res) => {
-	console.log('modify an appartments route');
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'modify appartment route'
-	});
+	try {
+		let updatedAppartment = await Appartment.findByIdAndUpdate(
+			req.params.id,
+			req.body,
+			{ new: true, runValidators: true }
+		);
+
+		res.status(200).json({
+			status: 'success',
+			result: updatedAppartment.length,
+			data: updatedAppartment
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 //delete an appartment
 router.delete('/:id', authorize, async (req, res) => {
-	console.log('delete appartments route');
+	try {
+		await Appartment.findByIdAndDelete(req.params.id);
 
-	res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'delete appartment route'
-	});
+		res.status(204).json({
+			status: 'success',
+			message: 'Appartment deleted !'
+		});
+	} catch (error) {
+		console.log(error);
+		res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 module.exports = router;
