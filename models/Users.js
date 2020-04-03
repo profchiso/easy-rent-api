@@ -17,8 +17,10 @@ const userSchema = new mongoose.Schema({
 	},
 	password: {
 		type: String,
-		required: true
+		required: true,
+		select: false //excludes the password while returnin user data
 	},
+	passwordChangedAt: Date,
 	address: {
 		type: String,
 		required: ['true', 'Please provide a valid address'],
@@ -39,11 +41,39 @@ const userSchema = new mongoose.Schema({
 		default: 'user'
 	}
 });
+
+//mongoose pre middleware to t hash password before saving it to database
 userSchema.pre('save', async function(next) {
 	if (!this.isModified('password')) return next();
 	this.password = await bcrypt.hash(this.password, 10);
-	this.confirmPassword = undefined;
+	this.confirmPassword = undefined; //removes the confirmpassword field from the req.body before saving to database
 	next();
 });
+
+//instant middleware function to validate password on login
+userSchema.methods.isMatchPassword = async function(
+	enteredPassword,
+	userpassword
+) {
+	return await bcrypt.compare(enteredPassword, userpassword);
+};
+
+//instance middle function to check if user changed password after a jwt token was isssued
+userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function(
+	JWTTimeStamp
+) {
+	//check if the user has changed password
+	if (this.passwordChangedAt) {
+		let changePasswordTimeStamp = parseInt(
+			this.passwordChangedAt.getTime() / 1000,
+			10
+		); // convert to timestamp to be uniform with the iat timestamp that the jwt provides, divided by 1000 to change  from millseconds to seconds, also second parameter of parseInt convert the result to base 10
+
+		console.log(changePasswordTimeStamp, JWTTimeStamp);
+
+		return JWTTimeStamp < changePasswordTimeStamp;
+	}
+	return false;
+};
 const User = mongoose.model('user', userSchema);
 module.exports = User;

@@ -15,7 +15,7 @@ connectToDB();
 const PORT = process.env.PORT || 5000;
 
 const app = express();
-
+//console.log(parseInt('2280873', 8));
 //middlewares
 app.use(express.json({ extended: false }));
 app.use(cors());
@@ -23,7 +23,7 @@ app.use(cors());
 //routes
 app.use('/easy-rent/api/v1/users', userRoute);
 app.use('/easy-rent/api/v1/appartment', appartmentRoute);
-app.use('/easy-rent/api/v1/auth', authRoute);
+// app.use('/easy-rent/api/v1/auth', authRoute);
 
 //catch undefined endpoints
 app.use(undefinedRoutes);

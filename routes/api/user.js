@@ -10,7 +10,7 @@ const authorize = require('../../middlewares/auth');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // get all users
-router.get('/', async (req, res) => {
+router.get('/', authorize, async (req, res) => {
 	//this route can take parameters pass it by ?param=value
 
 	try {
@@ -76,7 +76,7 @@ router.get('/', async (req, res) => {
 		res.status(200).json({
 			status: 'success',
 			result: users.length,
-			data: users
+			users
 		});
 	} catch (error) {
 		console.log(error);
@@ -88,13 +88,12 @@ router.get('/', async (req, res) => {
 });
 
 //get single user
-router.get('/:id', async (req, res) => {
+router.get('/:id', authorize, async (req, res) => {
 	try {
-		const user = await User.findById(req.params.id).select('-password -__v');
+		const user = await User.findById(req.params.id).select('-__v');
 		res.status(200).json({
 			status: 'success',
-
-			data: user
+			user
 		});
 	} catch (error) {
 		console.log(error);
@@ -128,7 +127,7 @@ router.post(
 			return res.status(400).json({ status: 'Failed', errors: errors.array() });
 		}
 		try {
-			const { email, password } = req.body;
+			const { email } = req.body;
 			const user = await User.findOne({ email });
 			if (user) {
 				return res.status(400).json({
@@ -156,6 +155,7 @@ router.post(
 				address: userData.address,
 				phone: userData.phone
 			});
+			console.log(createUser.id);
 			const payLoad = {
 				user: {
 					id: createUser.id
@@ -197,17 +197,10 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			const user = await User.findOne({ email });
+			const user = await User.findOne({ email }).select('+password');
 
-			if (!user) {
-				return res.status(404).json({
-					status: 'Failed',
-					message: 'Invalid user credentials'
-				});
-			}
-			const isMatchedPassword = await bcrypt.compare(password, user.password);
-			if (!isMatchedPassword) {
-				return res.status(404).json({
+			if (!user || !(await user.isMatchPassword(password, user.password))) {
+				return res.status(401).json({
 					status: 'Failed',
 					message: 'Invalid user credentials'
 				});
@@ -233,7 +226,7 @@ router.post(
 );
 
 //modify user accout
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', authorize, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
 			new: true,
@@ -241,7 +234,7 @@ router.patch('/:id', async (req, res) => {
 		}).select('-password');
 		res.status(200).json({
 			status: 'success',
-			data: updatedUser
+			user: updatedUser
 		});
 	} catch (error) {
 		console.log(error);
@@ -253,7 +246,7 @@ router.patch('/:id', async (req, res) => {
 });
 
 //delete a user
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authorize, async (req, res) => {
 	try {
 		await User.findByIdAndRemove(req.params.id).select('-password');
 		res.status(204).json({
