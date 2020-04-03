@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const validator = require('validator');
@@ -38,7 +39,16 @@ const userSchema = new mongoose.Schema({
 	},
 	role: {
 		type: String,
+		enum: ['user', 'admin', 'developer'],
 		default: 'user'
+	},
+	passwordResetToken: {
+		type: String,
+		select: false
+	},
+	passwordResetTokenExpires: {
+		type: Date,
+		select: false
 	}
 });
 
@@ -58,7 +68,7 @@ userSchema.methods.isMatchPassword = async function(
 	return await bcrypt.compare(enteredPassword, userpassword);
 };
 
-//instance middle function to check if user changed password after a jwt token was isssued
+//instance middleware function to check if user changed password after a jwt token was isssued
 userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function(
 	JWTTimeStamp
 ) {
@@ -74,6 +84,19 @@ userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function(
 		return JWTTimeStamp < changePasswordTimeStamp;
 	}
 	return false;
+};
+
+//instance middleware function to generate password reset token
+userSchema.methods.generatePasswordResetToken = function() {
+	const resetPasswordToken = crypto.randomBytes(32).toString('hex');
+
+	this.passwordResetToken = crypto
+		.createHash('sha256')
+		.update(resetPasswordToken)
+		.digest('hex');
+	this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000; // pick the current time and add 10 ie(10*60) minutes to it and convert to milliseconds by multiplying with 1000
+
+	return resetPasswordToken;
 };
 const User = mongoose.model('user', userSchema);
 module.exports = User;

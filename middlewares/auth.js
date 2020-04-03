@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/Users');
 const JWT_SECRET = process.env.JWT_SECRET;
 
-module.exports = async (req, res, next) => {
+exports.authanticate = async (req, res, next) => {
 	try {
 		//formal implementation
 		// const bearerHeader = req.headers['authorization'];
@@ -73,4 +73,24 @@ module.exports = async (req, res, next) => {
 			message: 'Invalid token'
 		});
 	}
+};
+
+exports.authorize = (...roles) => {
+	return (req, res, nex) => {
+		if (!roles.includes(req.user.role)) {
+			return res.status(403).json({
+				status: 'Failed',
+				message: 'Sorry you are not allowed to carry out this operation'
+			});
+		}
+		//user is authorized
+		next();
+	};
+};
+
+exports.forgotPassword = (req, res, next) => {
+	next();
+};
+exports.resetPassword = (req, res, next) => {
+	next();
 };
