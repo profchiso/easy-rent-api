@@ -88,9 +88,4 @@ exports.authorize = (...roles) => {
 	};
 };
 
-exports.forgotPassword = (req, res, next) => {
-	next();
-};
-exports.resetPassword = (req, res, next) => {
-	next();
-};
+exports.updatePassword = (req, res, next) => {};

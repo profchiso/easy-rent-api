@@ -1,3 +1,4 @@
+const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
@@ -6,12 +7,7 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const User = require('../../models/Users');
 const { sendEmail } = require('../../utils/email');
-const {
-	authanticate,
-	authorize,
-	forgotPassword,
-	resetPassword
-} = require('../../middlewares/auth');
+const { authanticate, authorize } = require('../../middlewares/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -243,7 +239,7 @@ router.post(
 	}
 );
 
-router.post('/forgot-password', forgotPassword, async (req, res) => {
+router.post('/forgot-password', async (req, res) => {
 	try {
 		const { email } = req.body;
 		if (!email) {
@@ -304,7 +300,57 @@ router.post('/forgot-password', forgotPassword, async (req, res) => {
 	}
 });
 
-router.patch('/reset-password/:token', resetPassword, async (req, res) => {});
+router.patch('/reset-password/:token', async (req, res) => {
+	try {
+		//get user base on the reset password token
+		const { token } = req.params;
+		const { password, confirmPassword } = req.body;
+		const hashedToken = crypto
+			.createHash('sha256')
+			.update(token)
+			.digest('hex');
+		//check if there is user with the hashedtoken and also if the token has not expired
+		const user = await User.findOne({
+			passwordResetToken: hashedToken,
+			passwordResetTokenExpires: { $gt: Date.now() }
+		}).select(
+			'+password +confirmPassword +passwordResetToken +passwordResetTokenExpires'
+		);
+		//if no user is found
+		if (!user) {
+			return res.status(400).json({
+				status: 'failed',
+				message: 'Token invalid or has expires'
+			});
+		}
+		//update user data and save
+		user.password = password;
+		user.confirmPassword = confirmPassword;
+		user.passwordResetToken = undefined;
+		user.passwordResetTokenExpires = undefined;
+		await user.save();
+
+		//log user in by assigning hin a token
+		const payLoad = {
+			user: {
+				id: user.id
+			}
+		};
+		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
+			if (error) throw error;
+			return res.status(200).json({
+				status: 'success',
+				token
+			});
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({
+			status: 'Failed',
+			message: error
+		});
+	}
+});
 
 //modify user accout
 router.patch('/:id', authanticate, async (req, res) => {

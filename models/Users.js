@@ -21,6 +21,11 @@ const userSchema = new mongoose.Schema({
 		required: true,
 		select: false //excludes the password while returnin user data
 	},
+	confirmPassword: {
+		type: String,
+		required: true,
+		select: false
+	},
 	passwordChangedAt: Date,
 	address: {
 		type: String,
@@ -57,6 +62,15 @@ userSchema.pre('save', async function(next) {
 	if (!this.isModified('password')) return next();
 	this.password = await bcrypt.hash(this.password, 10);
 	this.confirmPassword = undefined; //removes the confirmpassword field from the req.body before saving to database
+	next();
+});
+
+//mongoose pre middleware to run when there  is reset password action
+userSchema.pre('save', function(next) {
+	if (!this.isModified('password') || this.isNew) {
+		return next();
+	}
+	this.passwordChangedAt = Date.now() - 1000;
 	next();
 });
 
