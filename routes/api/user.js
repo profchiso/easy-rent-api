@@ -59,7 +59,7 @@ router.get(
 			}
 
 			//pagination
-			//pass page and limit params  eg  ?page=1&pageSize=20
+			//pass page and pageSize params  eg  ?page=1&pageSize=20
 
 			const page = req.query.page * 1 || 1;
 			const pageSize = req.query.pageSize * 1 || 50;
@@ -104,6 +104,12 @@ router.get(
 	async (req, res) => {
 		try {
 			const user = await User.findById(req.params.id).select('-__v');
+			if (!user) {
+				return res.status(404).json({
+					status: 'Failed',
+					message: `No user with the id ${req.params.id}`
+				});
+			}
 			return res.status(200).json({
 				status: 'success',
 				user
@@ -157,7 +163,7 @@ router.post(
 			const userData = req.body;
 			userData.avatar = avatar;
 
-			//comment because password is now hash  using a pre middleware in the User model
+			//commented because password is now hash  using a pre middleware in the User model
 			// const salt = await bcrypt.genSalt(10);
 			// userData.password = await bcrypt.hash(password, salt);
 
@@ -268,7 +274,7 @@ router.post('/forgot-password', async (req, res) => {
 
 		const message = `Forgot your password?, reset your password here ${resetURL}. \n please if you did not request for password reset, ignore this message`;
 
-		//send the
+		//send the reset password mail
 		try {
 			await sendEmail({
 				email: user.email,
@@ -288,7 +294,7 @@ router.post('/forgot-password', async (req, res) => {
 			await user.save({ validateBeforeSave: false });
 			return res.status(500).json({
 				status: 'Failed',
-				message: 'There was an erro sending the email please try again later'
+				message: 'There was an error sending the email please try again later'
 			});
 		}
 	} catch (error) {

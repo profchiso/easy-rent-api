@@ -7,12 +7,69 @@ const { authanticate, authorize } = require('../../middlewares/auth');
 // get all appartments
 router.get('/', async (req, res) => {
 	try {
-		let appartments = await Appartment.find();
+		// console.log(req.query);
+		let requestQueryObject = { ...req.query }; //make a copy of the req.query object
+
+		let excludedQueryField = ['sort', 'page', 'pageSize', 'fields']; //define keywords in the req.query that should not be considered while querying the database
+
+		excludedQueryField.forEach((element) => delete requestQueryObject[element]); //delete any key in the requestQueryObject containing an allement in the  excludedQueryField  array
+
+		//advance query using gte,lte,gt,lt
+		let queryToString = JSON.stringify(requestQueryObject);
+		queryToString = queryToString.replace(
+			/\b(gte|lte|gt|lt)\b/g,
+			(match) => `$${match}`
+		);
+
+		let query = Appartment.find(JSON.parse(queryToString)); // the .select excludes any spacified field before sending the document
+
+		//sorting query result
+		if (req.query.sort) {
+			// to sort pass the sort param ie ?sort="field1,field2,..." //ascending
+			// to sort pass the sort param ie ?sort="-field1,-field2,..." //descending
+			const sortBy = req.query.sort.split(',').join(' ');
+			query = query.sort(sortBy);
+		} else {
+			query = query.sort('-createdAt');
+		}
+
+		//field limiting
+		//pass a parameter called field eg. ?fields=field1,field2,...
+		if (req.query.fields) {
+			const fields = req.query.fields.split(',').join(' ');
+
+			query = query.select(fields);
+		} else {
+			query = query.select('-__v');
+		}
+
+		//pagination
+		//pass page and pageSize params  eg  ?page=1&pageSize=20
+
+		const page = req.query.page * 1 || 1;
+		const pageSize = req.query.pageSize * 1 || 50;
+		const skip = (page - 1) * pageSize;
+		query = query.skip(skip).limit(pageSize);
+
+		//handle a case where user specify page that does not exists
+		if (req.query.page) {
+			let numberOfDocument = await Appartment.countDocuments();
+			if (skip >= numberOfDocument) {
+				return res.status(404).json({
+					status: 'failed',
+					result: 0,
+					message: 'This page does not exits'
+				});
+			}
+		}
+
+		//execute query
+		const appartments = await query; // query.sort().select().skip().limit()
 
 		return res.status(200).json({
 			status: 'success',
 			result: appartments.length,
-			data: appartments
+			appartments
 		});
 	} catch (error) {
 		console.log(error);
@@ -108,7 +165,7 @@ router.patch('/:id', authanticate, async (req, res) => {
 router.delete(
 	'/:id',
 	authanticate,
-	authorize('admin', 'developer', 'user'),
+	authorize('admin', 'user'),
 	async (req, res) => {
 		try {
 			await Appartment.findByIdAndDelete(req.params.id);
