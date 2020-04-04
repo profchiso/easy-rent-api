@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const Appartment = require('../../models/Appartment');
-const { authanticate, authorize } = require('../../middlewares/auth');
+const { authenticate, authorize } = require('../../middlewares/auth');
 
 // get all appartments
 router.get('/', async (req, res) => {
@@ -108,7 +108,7 @@ router.get('/:id', async (req, res) => {
 });
 
 //get all appartment belonging to one user
-router.get('/user-appartments/:userID', authanticate, async (req, res) => {
+router.get('/user-appartments/:userID', authenticate, async (req, res) => {
 	try {
 		let userAppartments = await Appartment.find({
 			'user.id': req.params.userID
@@ -129,7 +129,7 @@ router.get('/user-appartments/:userID', authanticate, async (req, res) => {
 });
 
 //add an appartment
-router.post('/', [], authanticate, async (req, res) => {
+router.post('/', [], authenticate, async (req, res) => {
 	console.log('add appartments route');
 	return res.status(200).json({
 		status: 'success',
@@ -139,7 +139,7 @@ router.post('/', [], authanticate, async (req, res) => {
 });
 
 //modify an appartment
-router.patch('/:id', authanticate, async (req, res) => {
+router.patch('/:id', authenticate, async (req, res) => {
 	try {
 		let updatedAppartment = await Appartment.findByIdAndUpdate(
 			req.params.id,
@@ -164,7 +164,7 @@ router.patch('/:id', authanticate, async (req, res) => {
 //delete an appartment, , restricted to admins developers and  users
 router.delete(
 	'/:id',
-	authanticate,
+	authenticate,
 	authorize('admin', 'user'),
 	async (req, res) => {
 		try {

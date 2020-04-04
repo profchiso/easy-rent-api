@@ -24,7 +24,14 @@ const userSchema = new mongoose.Schema({
 	confirmPassword: {
 		type: String,
 		required: true,
-		select: false
+		select: false,
+		validate: {
+			//workes only for create and save and not update
+			validator: function(val) {
+				return val === this.password;
+			},
+			message: 'Password and confirm password does not match'
+		}
 	},
 	passwordChangedAt: Date,
 	address: {
@@ -53,6 +60,11 @@ const userSchema = new mongoose.Schema({
 	},
 	passwordResetTokenExpires: {
 		type: Date,
+		select: false
+	},
+	isActiveUser: {
+		type: Boolean,
+		default: true,
 		select: false
 	}
 });
@@ -112,5 +124,11 @@ userSchema.methods.generatePasswordResetToken = function() {
 
 	return resetPasswordToken;
 };
+
+// query middleware to not return user with isActiveUser=== false
+userSchema.pre(/^find/, function(next) {
+	this.find({ isActiveUser: { $ne: false } }); //return only active users
+	next();
+});
 const User = mongoose.model('user', userSchema);
 module.exports = User;

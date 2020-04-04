@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/Users');
 const JWT_SECRET = process.env.JWT_SECRET;
 
-exports.authanticate = async (req, res, next) => {
+exports.authenticate = async (req, res, next) => {
 	try {
 		//formal implementation
 		// const bearerHeader = req.headers['authorization'];

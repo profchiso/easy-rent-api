@@ -7,14 +7,14 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const User = require('../../models/Users');
 const { sendEmail } = require('../../utils/email');
-const { authanticate, authorize } = require('../../middlewares/auth');
+const { authenticate, authorize } = require('../../middlewares/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // get all users , restricted to admins and developers users
 router.get(
 	'/',
-	authanticate,
+	authenticate,
 	authorize('admin', 'developer'),
 	async (req, res) => {
 		//this route can take parameters pass it by ?param=value
@@ -99,7 +99,7 @@ router.get(
 //get single user, , restricted to admins and developers users
 router.get(
 	'/:id',
-	authanticate,
+	authenticate,
 	authorize('admin', 'developer'),
 	async (req, res) => {
 		try {
@@ -181,11 +181,13 @@ router.post(
 					id: createUser.id
 				}
 			};
+			createUser.password = undefined;
 			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 				if (error) throw error;
 				return res.status(201).json({
 					status: 'success',
-					token
+					token,
+					user: createUser
 				});
 			});
 		} catch (error) {
@@ -231,11 +233,22 @@ router.post(
 					id: user.id
 				}
 			};
+			user.password = undefined;
 			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 				if (error) throw error;
+
+				//  to send token as cookie to the browser  use the code below
+				res.cookie('jwt_token', token, {
+					secure: process.env.NODE_ENV === 'production' ? true : false,
+					httpOnly: true,
+					expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) //expires in 90days
+				});
+
+				//end of code to send token as cookie
 				return res.status(200).json({
 					status: 'success',
-					token
+					token,
+					user
 				});
 			});
 		} catch (error) {
@@ -245,6 +258,7 @@ router.post(
 	}
 );
 
+//send reset password link route
 router.post('/forgot-password', async (req, res) => {
 	try {
 		const { email } = req.body;
@@ -306,6 +320,7 @@ router.post('/forgot-password', async (req, res) => {
 	}
 });
 
+//reset password route
 router.patch('/reset-password/:token', async (req, res) => {
 	try {
 		//get user base on the reset password token
@@ -358,8 +373,117 @@ router.patch('/reset-password/:token', async (req, res) => {
 	}
 });
 
+//normal update password route
+router.patch('/update-password', authenticate, async (req, res) => {
+	//get the submitted password
+	const { oldPassword, newPassword, newConfirmPassword } = req.body;
+	try {
+		//get the user from the user collection
+		let user = await User.findById(req.user.id).select(
+			'+password +confirmPassword'
+		);
+		if (!user) {
+			return res.status(404).json({
+				status: 'Failed',
+				message: 'User not found'
+			});
+		}
+
+		// check if passwaord matches the one in the database
+		let passwordIsMatch = await user.isMatchPassword(
+			oldPassword,
+			user.password
+		);
+		if (!passwordIsMatch) {
+			return res.status(401).json({
+				status: 'Failed',
+				message: 'The password you entered is incorrect'
+			});
+		}
+		user.password = newPassword;
+		user.confirmPassword = newConfirmPassword;
+		await user.save();
+
+		// always use the save for password update and not findbyidandupdate in order to run the User model pre middlewares
+
+		//log user in by assigning him a token
+		const payLoad = {
+			user: {
+				id: user.id
+			}
+		};
+		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
+			if (error) throw error;
+			return res.status(200).json({
+				status: 'success',
+				token
+			});
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
+});
+
+//update other user data
+router.patch('/update-me', authenticate, async (req, res) => {
+	try {
+		//find the user
+		//formal implementation
+		// let updatedata = { ...req.body };
+		// let excludedFields = ['password', 'confirmPassword', 'role'];
+
+		//excludedFields.forEach((field) => delete updatedata[field]); //exclude the password,confirmpassword,role field from update data
+		// const user = await User.findByIdAndUpdate(req.user.id, updatedata, {
+		// 		new: true,
+		// 		runValidators: true
+		// 	});
+		//update user data
+
+		//more robust implementation
+		const { password, confirmPassword } = req.body;
+		if (password || role || confirmPassword) {
+			return res.status(400).json({
+				status: 'Failed',
+				message:
+					'You cannot update password or role or confirmp password from this route'
+			});
+		}
+
+		let updatedata = { ...req.body };
+		const excludedFields = [
+			'password',
+			'confirmPassword',
+			'role',
+			'passwordChangedAt',
+			'passwordResetToken',
+			'passwordResetTokenExpires'
+		];
+
+		excludedFields.forEach((field) => delete updatedata[field]); //exclude the password,confirmpassword,role field  etc from update data
+		const user = await User.findByIdAndUpdate(req.user.id, updatedata, {
+			new: true,
+			runValidators: true
+		});
+		return res.status(200).json({
+			status: 'success',
+			user
+		});
+		//send the updated user data
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
+});
+
 //modify user accout
-router.patch('/:id', authanticate, async (req, res) => {
+router.patch('/:id', authenticate, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
 			new: true,
@@ -378,18 +502,37 @@ router.patch('/:id', authanticate, async (req, res) => {
 	}
 });
 
-//delete a user
-router.delete('/:id', authanticate, async (req, res) => {
+//delete a user by admin
+router.delete('/:id', authenticate, authorize, async (req, res) => {
 	try {
-		await User.findByIdAndRemove(req.params.id).select('-password');
+		await User.findByIdAndRemove(req.body.email);
 		return res.status(204).json({
 			status: 'success',
-			message: `User with the id ${req.params.id} has been deleted`
+			message: `User with the id ${req.body.email} has been deleted`
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'failed',
+			error
+		});
+	}
+});
+
+//route for a user to deactivated his account
+router.delete('/delete-me', authenticate, async (req, res) => {
+	try {
+		await User.findByIdAndUpdate(req.user.id, {
+			isActiveUser: false
+		});
+		return res.status(204).json({
+			status: 'success',
+			message: 'Acount deactivated successfully'
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({
+			status: 'Failed',
 			error
 		});
 	}
