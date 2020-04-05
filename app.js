@@ -20,8 +20,9 @@ connectToDB(); //function to connect to database
 const PORT = process.env.PORT || 5000;
 
 const app = express();
-
+app.enable('trust proxy');
 //middlewares
+
 //middleware to set security HTTP headers
 app.use(helmet());
 

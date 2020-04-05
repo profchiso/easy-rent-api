@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const Appartment = require('../../models/Appartment');
+const User = require('../../models/Users');
 const { authenticate, authorize } = require('../../middlewares/auth');
 
 // get all appartments
@@ -21,7 +22,10 @@ router.get('/', async (req, res) => {
 			(match) => `$${match}`
 		);
 
-		let query = Appartment.find(JSON.parse(queryToString)); // the .select excludes any spacified field before sending the document
+		let query = Appartment.find(JSON.parse(queryToString)).populate({
+			path: 'user',
+			select: '-__v -role -createdAt'
+		}); // the .select excludes any spacified field before sending the document
 
 		//sorting query result
 		if (req.query.sort) {
@@ -83,7 +87,10 @@ router.get('/', async (req, res) => {
 //get single appartment
 router.get('/:id', async (req, res) => {
 	try {
-		let appartment = await Appartment.findById(req.params.id);
+		let appartment = await Appartment.findById(req.params.id).populate({
+			path: 'user',
+			select: '-__v -role -createdAt'
+		}); //.populate fill the selected field with its data from the collection where it is referenced
 
 		if (!appartment) {
 			return res.status(404).json({
@@ -129,13 +136,26 @@ router.get('/user-appartments/:userID', authenticate, async (req, res) => {
 });
 
 //add an appartment
-router.post('/', [], authenticate, async (req, res) => {
-	console.log('add appartments route');
-	return res.status(200).json({
-		status: 'success',
-		result: 1,
-		data: 'add appartment route'
-	});
+router.post('/', authenticate, async (req, res) => {
+	try {
+		// const user = await User.findById(req.user.id).select(
+		// 	'-__v -createdAt -role'
+		// );
+		req.body.user = req.user.id;
+		const newAppartment = await Appartment.create(req.body);
+
+		return res.status(200).json({
+			status: 'success',
+			result: newAppartment.length,
+			appartment: newAppartment
+		});
+	} catch (error) {
+		console.log(error);
+		return res.status(400).json({
+			status: 'Failed',
+			error
+		});
+	}
 });
 
 //modify an appartment

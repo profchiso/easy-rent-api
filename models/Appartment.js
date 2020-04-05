@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+
 const appartmentSchema = new mongoose.Schema({
 	houseName: {
 		type: String
@@ -11,12 +12,13 @@ const appartmentSchema = new mongoose.Schema({
 	},
 	houseImage: [String],
 	gps: {
-		latitude: {
-			type: Number
+		type: {
+			type: String,
+			default: 'Point',
+			enum: 'Point'
 		},
-		longitude: {
-			type: Number
-		}
+		coodinate: [Number],
+		address: String
 	},
 	dateUploaded: {
 		type: Date,
@@ -27,17 +29,26 @@ const appartmentSchema = new mongoose.Schema({
 		default: false
 	},
 	priceRange: {
-		type: String,
-		required: true
+		type: String
+		// required: true
 	},
 	user: {
-		type: mongoose.Schema.Types.ObjectId,
-		ref: 'user'
+		type: mongoose.Schema.ObjectId,
+		ref: 'user',
+		required: true
 	},
 	isDeleted: {
 		type: Boolean,
 		default: false
 	}
 });
+
+//pre middleware to populate the user field from the user collection
+// appartmentSchema.pre('save', async function(next) {
+// 	this.user = await User.findById(req.user.id).select(
+// 		'+name +email +phone +address +avatar'
+// 	);
+// 	next();
+// });
 const Appartment = mongoose.model('appartment', appartmentSchema);
 module.exports = Appartment;

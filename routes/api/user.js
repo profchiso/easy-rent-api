@@ -173,7 +173,8 @@ router.post(
 				avatar: userData.avatar,
 				password: userData.password,
 				address: userData.address,
-				phone: userData.phone
+				phone: userData.phone,
+				confirmPassword: userData.confirmPassword
 			});
 			console.log(createUser.id);
 			const payLoad = {
@@ -239,7 +240,7 @@ router.post(
 
 				//  to send token as cookie to the browser  use the code below
 				res.cookie('jwt_token', token, {
-					secure: process.env.NODE_ENV === 'production' ? true : false,
+					secure: req.secure || req.headers('x-forwarded-proto') === 'https',
 					httpOnly: true,
 					expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) //expires in 90days
 				});
