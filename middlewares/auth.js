@@ -63,7 +63,7 @@ exports.authenticate = async (req, res, next) => {
 
 		//Allow access to protected route
 		req.user = user;
-		console.log(req.user);
+		// console.log(req.user);
 		next();
 	} catch (error) {
 		console.log(error);

@@ -1,9 +1,42 @@
 const express = require('express');
 const router = express.Router();
+const multer = require('multer');
 const { check, validationResult } = require('express-validator');
 const Appartment = require('../../models/Appartment');
 const User = require('../../models/Users');
 const { authenticate, authorize } = require('../../middlewares/auth');
+const multerStorage = multer.diskStorage({
+	destination: (req, file, cb) => {
+		cb(null, 'public/img/appartment-img');
+	},
+	filename: (req, files, cb) => {
+		const [houseImage, toiletImage] = req.files;
+		const houseimageExt = houseImage.mimetype.split('/')[1];
+		const toiletimageExt = toiletImage.mimetype.split('/')[1];
+		cb(
+			null,
+			`${req.user.id}-${houseImage.filename}-${Date.now()}.${houseimageExt}`
+		);
+		cb(
+			null,
+			`${req.user.id}-${toiletImage.filename}-${Date.now()}.${toiletimageExt}`
+		);
+	}
+});
+
+//filter for images
+const multerFilters = (req, file, cb) => {
+	const [houseImage, toiletImage] = req.files;
+	if (
+		houseImage.mimetype.startWith('image') &&
+		toiletImage.mimetype.startWith('image')
+	) {
+		cb(null, true);
+	}
+	cb(new Error('not an image'), false);
+};
+
+const upload = multer({ storage: multerStorage, fileFilter: multerFilters });
 
 // get all appartments
 router.get('/', async (req, res) => {
@@ -136,18 +169,24 @@ router.get('/user-appartments/:userID', authenticate, async (req, res) => {
 });
 
 //add an appartment
-router.post('/', authenticate, async (req, res) => {
+
+//upload.single("fieldname") for single image upload from multer,
+//upload.array("fieldname",limitupload) for multiple image upload where limitupload = number of expected image can be more but cannot be less
+router.post('/', authenticate, upload.array('images', 3), async (req, res) => {
+	const [house, toilet] = req.files;
+	console.log(house, toilet);
+
 	try {
 		// const user = await User.findById(req.user.id).select(
 		// 	'-__v -createdAt -role'
 		// );
-		req.body.user = req.user.id;
-		const newAppartment = await Appartment.create(req.body);
+		// req.body.user = req.user.id;
+		// const newAppartment = await Appartment.create(req.body);
 
 		return res.status(200).json({
-			status: 'success',
-			result: newAppartment.length,
-			appartment: newAppartment
+			status: 'success'
+			// result: newAppartment.length,
+			// appartment: newAppartment
 		});
 	} catch (error) {
 		console.log(error);

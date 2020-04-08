@@ -10,7 +10,9 @@ const appartmentSchema = new mongoose.Schema({
 	houseType: {
 		type: String
 	},
-	houseImage: [String],
+	houseImage: String,
+	toiletImage: String,
+
 	gps: {
 		type: {
 			type: String,
@@ -50,5 +52,11 @@ const appartmentSchema = new mongoose.Schema({
 // 	);
 // 	next();
 // });
+appartmentSchema.pre('/^find/', function(next) {
+	this.populate({
+		path: 'user',
+		select: '-__v -role -createdAt'
+	});
+});
 const Appartment = mongoose.model('appartment', appartmentSchema);
 module.exports = Appartment;
