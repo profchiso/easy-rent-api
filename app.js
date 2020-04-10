@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const mongoSanitizer = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 const hpp = require('hpp');
+const bodyParser = require('body-parser');
 
 //user defined modules
 const connectToDB = require('./controllers/dbController');
@@ -31,10 +32,12 @@ const limiter = rateLimit({
 	max: 300, //max no of request per IP in the specified time
 	windowMs: 60 * 60 * 1000, //time allowed for the num of request
 	message:
-		'Maximum allowed request  for an IP in an hour exceeded, please try again in an hour time' //
+		'Maximum allowed request  for an IP in an hour exceeded, please try again in an hour time', //
 });
 app.use('/easy-rent/api/', limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
 app.use(express.json({ extended: false })); //middleware for body-paser
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 app.use(cors()); //middle ware to allow cross origin resource sharing
 
 //protect DB from NOSQL query injections using the express-mongo-sanitize middleware

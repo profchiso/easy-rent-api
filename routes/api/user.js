@@ -160,7 +160,7 @@ router.post(
 			.notEmpty()
 	],
 	async (req, res) => {
-		const errors = validationResult(req);
+		const errors = validationResult(req.body);
 		if (!errors.isEmpty()) {
 			return res.status(400).json({ status: 'Failed', errors: errors.array() });
 		}
@@ -215,7 +215,7 @@ router.post(
 						createUser.name.split(' ')[0]
 					}, your Accout with EasyRent has been created successfully`;
 
-					await sendEmailWithNodeMailer({
+					await sendEmailWithSendgrid({
 						email: createUser.email,
 						subject: 'Account created successfully',
 						message
@@ -251,7 +251,7 @@ router.post(
 	],
 
 	async (req, res) => {
-		const errors = validationResult(req);
+		const errors = validationResult(req.body); // pass req.body for form data validation but for json, just pass req;
 		if (!errors.isEmpty()) {
 			return res.status(400).json({
 				status: 'Failed',
@@ -335,7 +335,7 @@ router.post('/forgot-password', async (req, res) => {
 
 		//send the reset password mail
 		try {
-			await sendEmailWithNodeMailer({
+			await sendEmailWithSendgrid({
 				email: user.email,
 				subject: 'Your password reset token last for (5 minutes)',
 				message

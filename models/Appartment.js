@@ -46,6 +46,7 @@ const appartmentSchema = new mongoose.Schema({
 		type: String,
 		required: true
 	},
+	userId: String,
 	user: {
 		type: mongoose.Schema.ObjectId,
 		ref: 'user',
