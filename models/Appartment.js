@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 
 const appartmentSchema = new mongoose.Schema({
 	houseName: {
-		type: String
+		type: String,
+		required: true
 	},
 	houseNumber: {
 		type: String
@@ -10,18 +11,29 @@ const appartmentSchema = new mongoose.Schema({
 	houseType: {
 		type: String
 	},
-	houseImage: String,
-	toiletImage: String,
-
-	gps: {
-		type: {
-			type: String,
-			default: 'Point',
-			enum: 'Point'
-		},
-		coodinate: [Number],
-		address: String
+	state: {
+		type: String,
+		required: true
 	},
+	LGA: {
+		type: String,
+		required: true
+	},
+	houseImage: String,
+
+	images: [String],
+
+	// gps: {
+	// 	type: {
+	// 		type: String,
+	// 		default: 'Point',
+	// 		enum: 'Point'
+	// 	},
+	// 	coodinate: [Number],
+	// 	address: String
+	// },
+	latitude: Number,
+	longitude: Number,
 	dateUploaded: {
 		type: Date,
 		default: Date.now()
@@ -31,8 +43,8 @@ const appartmentSchema = new mongoose.Schema({
 		default: false
 	},
 	priceRange: {
-		type: String
-		// required: true
+		type: String,
+		required: true
 	},
 	user: {
 		type: mongoose.Schema.ObjectId,

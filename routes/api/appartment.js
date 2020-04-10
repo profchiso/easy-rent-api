@@ -1,28 +1,34 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
+const sharp = require('sharp');
 const { check, validationResult } = require('express-validator');
 const Appartment = require('../../models/Appartment');
 const User = require('../../models/Users');
 const { authenticate, authorize } = require('../../middlewares/auth');
-const multerStorage = multer.diskStorage({
-	destination: (req, file, cb) => {
-		cb(null, 'public/img/appartment-img');
-	},
-	filename: (req, files, cb) => {
-		const [houseImage, toiletImage] = req.files;
-		const houseimageExt = houseImage.mimetype.split('/')[1];
-		const toiletimageExt = toiletImage.mimetype.split('/')[1];
-		cb(
-			null,
-			`${req.user.id}-${houseImage.filename}-${Date.now()}.${houseimageExt}`
-		);
-		cb(
-			null,
-			`${req.user.id}-${toiletImage.filename}-${Date.now()}.${toiletimageExt}`
-		);
-	}
-});
+
+//store image upload in a disk
+// const multerStorage = multer.diskStorage({
+// 	destination: (req, file, cb) => {
+// 		cb(null, 'public/img/appartment-img');
+// 	},
+// 	filename: (req, files, cb) => {
+// 		const [houseImage, toiletImage] = req.files;
+// 		const houseimageExt = houseImage.mimetype.split('/')[1];
+// 		const toiletimageExt = toiletImage.mimetype.split('/')[1];
+// 		cb(
+// 			null,
+// 			`${req.user.id}-${houseImage.filename}-${Date.now()}.${houseimageExt}`
+// 		);
+// 		cb(
+// 			null,
+// 			`${req.user.id}-${toiletImage.filename}-${Date.now()}.${toiletimageExt}`
+// 		);
+// 	}
+// });
+
+//store uploaded image in the memory
+const multerStorage = multer.memoryStorage();
 
 //filter for images
 const multerFilters = (req, file, cb) => {
@@ -33,7 +39,7 @@ const multerFilters = (req, file, cb) => {
 	) {
 		cb(null, true);
 	}
-	cb(new Error('not an image'), false);
+	cb(new Error('Not an image'), false);
 };
 
 const upload = multer({ storage: multerStorage, fileFilter: multerFilters });
@@ -46,7 +52,7 @@ router.get('/', async (req, res) => {
 
 		let excludedQueryField = ['sort', 'page', 'pageSize', 'fields']; //define keywords in the req.query that should not be considered while querying the database
 
-		excludedQueryField.forEach((element) => delete requestQueryObject[element]); //delete any key in the requestQueryObject containing an allement in the  excludedQueryField  array
+		excludedQueryField.forEach((element) => delete requestQueryObject[element]); //delete any key in the requestQueryObject containing an element in the  excludedQueryField  array
 
 		//advance query using gte,lte,gt,lt
 		let queryToString = JSON.stringify(requestQueryObject);
@@ -71,7 +77,7 @@ router.get('/', async (req, res) => {
 		}
 
 		//field limiting
-		//pass a parameter called field eg. ?fields=field1,field2,...
+		//pass a parameter called field eg. ?fields=field1,field2,... to select the fields you want to see in the returned query
 		if (req.query.fields) {
 			const fields = req.query.fields.split(',').join(' ');
 
@@ -148,54 +154,115 @@ router.get('/:id', async (req, res) => {
 });
 
 //get all appartment belonging to one user
-router.get('/user-appartments/:userID', authenticate, async (req, res) => {
-	try {
-		let userAppartments = await Appartment.find({
-			'user.id': req.params.userID
-		});
+router.get(
+	'/user-appartments/my-appartments',
+	authenticate,
+	async (req, res) => {
+		try {
+			let userAppartments = await Appartment.find({
+				'user.id': req.user.id
+			});
 
-		return res.status(200).json({
-			status: 'success',
-			result: userAppartments.length,
-			data: userAppartments
-		});
-	} catch (error) {
-		console.log(error);
-		return res.status(400).json({
-			status: 'Failed',
-			error
-		});
+			return res.status(200).json({
+				status: 'success',
+				result: userAppartments.length,
+				data: userAppartments
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(400).json({
+				status: 'Failed',
+				error
+			});
+		}
 	}
-});
+);
 
 //add an appartment
 
 //upload.single("fieldname") for single image upload from multer,
-//upload.array("fieldname",limitupload) for multiple image upload where limitupload = number of expected image can be more but cannot be less
-router.post('/', authenticate, upload.array('images', 3), async (req, res) => {
-	const [house, toilet] = req.files;
-	console.log(house, toilet);
+//upload.array("fieldname",limitupload) for multiple image upload where limitupload = number of expected image can be more but cannot be less and the images have the same fieldname,
+//upload.fields([{ name: 'houseImage', maxCount: 1 },{ name: 'toiletImage', maxCount: 1 },]) to upload multiple images with different fieldname
 
-	try {
-		// const user = await User.findById(req.user.id).select(
-		// 	'-__v -createdAt -role'
-		// );
-		// req.body.user = req.user.id;
-		// const newAppartment = await Appartment.create(req.body);
+router.post(
+	'/',
+	authenticate,
+	[
+		check('houseName', 'House name  is required')
+			.not()
+			.notEmpty(),
 
-		return res.status(200).json({
-			status: 'success'
-			// result: newAppartment.length,
-			// appartment: newAppartment
-		});
-	} catch (error) {
-		console.log(error);
-		return res.status(400).json({
-			status: 'Failed',
-			error
-		});
+		check('houseType', 'House type is required')
+			.not()
+			.notEmpty(),
+		check('state', 'state is required')
+			.not()
+			.notEmpty(),
+		check('LGA', 'LGA is required')
+			.not()
+			.notEmpty(),
+		check('priceRange', 'price range is required')
+			.not()
+			.notEmpty()
+	],
+	upload.fields([
+		{ name: 'houseImage', maxCount: 1 },
+		{ name: 'images', maxCount: 3 }
+	]),
+	async (req, res) => {
+		const errors = validationResult(req);
+		if (!errors.isEmpty()) {
+			return res.status(400).json({ status: 'Failed', errors: errors.array() });
+		}
+		try {
+			req.body.user = req.user.id;
+			if (req.files.houseImage || req.files.images) {
+				//process house image
+				req.body.houseImage = `${req.user.id}-${
+					req.files.houseImage[0].filename
+				}-${Date.now()}.jpeg`;
+
+				await sharp(req.files.houseImage[0].buffer)
+					.resize(500, 500)
+					.toFormat('jpeg')
+					.jpeg({ quality: 90 })
+					.toFile(`public/img/appartment-img/${req.body.houseImage}`);
+
+				//process other images
+				req.body.images = [];
+				await Promise.all(
+					req.files.images.map(async (image, i) => {
+						const fileName = `${req.user.id}-${
+							image.filename
+						}-${Date.now()}-${i + 1}.jpeg`;
+
+						await sharp(image.buffer)
+							.resize(2000, 1333)
+							.toFormat('jpeg')
+							.jpeg({ quality: 90 })
+							.toFile(`public/img/appartment-img/${fileName}`);
+
+						req.body.images.push(fileName);
+					})
+				);
+			}
+
+			const newAppartment = await Appartment.create(req.body);
+
+			return res.status(200).json({
+				status: 'success',
+				result: newAppartment.length,
+				appartment: newAppartment
+			});
+		} catch (error) {
+			console.log(error);
+			return res.status(400).json({
+				status: 'Failed',
+				error
+			});
+		}
 	}
-});
+);
 
 //modify an appartment
 router.patch('/:id', authenticate, async (req, res) => {

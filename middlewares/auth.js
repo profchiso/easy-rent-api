@@ -87,5 +87,3 @@ exports.authorize = (...roles) => {
 		next();
 	};
 };
-
-exports.updatePassword = (req, res, next) => {};

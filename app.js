@@ -35,10 +35,10 @@ const limiter = rateLimit({
 });
 app.use('/easy-rent/api/', limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
 app.use(express.json({ extended: false })); //middleware for body-paser
-app.use(cors()); //middle ware to allow cross origin  request
+app.use(cors()); //middle ware to allow cross origin resource sharing
 
 //protect DB from NOSQL query injections using the express-mongo-sanitize middleware
-// interset the req.body, req.params, and req.query
+// interset the req.body, req.params, and req.query and remove malicious codes
 app.use(mongoSanitizer());
 
 //protect data from xss attack using the xss-clean middleware
@@ -50,8 +50,8 @@ app.use(xss());
 app.use(hpp({ whitelist: [] })); // use the whitelist option to specify some parameter that you want to allow duplicate in the array
 
 //routes
-app.use('/easy-rent/api/v1/users', userRoute);
-app.use('/easy-rent/api/v1/appartment', appartmentRoute);
+app.use('/easy-rent/api/v1/users', userRoute); //users route
+app.use('/easy-rent/api/v1/appartment', appartmentRoute); //appartment route
 // app.use('/easy-rent/api/v1/auth', authRoute);
 
 //catch undefined endpoints

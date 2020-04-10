@@ -4,7 +4,7 @@ const PASSWORD = process.env.EMAIL_PASSWORD;
 const EMAIL_HOST = process.env.EMAIL_HOST;
 const EMAIL_PORT = process.env.EMAIL_PORT;
 
-exports.sendEmail = async (options) => {
+exports.sendEmailWithNodeMailer = async (options) => {
 	//be sure to activate the "less secure app" option in your gmail account if you are using gmail  as the transport service
 	try {
 		const transporter = mailer.createTransport({
@@ -29,3 +29,5 @@ exports.sendEmail = async (options) => {
 		console.log(error);
 	}
 };
+
+exports.sendEmailWithSendgrid = async () => {};

@@ -5,11 +5,22 @@ const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const User = require('../../models/Users');
-const { sendEmail } = require('../../utils/email');
+const {
+	sendEmailWithNodeMailer,
+	sendEmailWithSendgrid
+} = require('../../utils/email');
 const { authenticate, authorize } = require('../../middlewares/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
+//middleware  to limit the number of request per hour from any IP address
+const limiter = rateLimit({
+	max: 10, //max no of request per IP in the specified time
+	windowMs: 60 * 60 * 1000, //time allowed for the num of request(1h)
+	message:
+		'Maximum allowed login request in an hour exceeded, please try again in an hour time or try resetting your password' //
+});
 
 // get all users , restricted to admins and developers users
 router.get(
@@ -27,7 +38,7 @@ router.get(
 
 			excludedQueryField.forEach(
 				(element) => delete requestQueryObject[element]
-			); //delete any key in the requestQueryObject containing an allement in the  excludedQueryField  array
+			); //delete any key in the requestQueryObject containing an element in the  excludedQueryField  array
 
 			//advance query using gte,lte,gt,lt
 			let queryToString = JSON.stringify(requestQueryObject);
@@ -160,7 +171,7 @@ router.post(
 				r: 'pg',
 				d: 'mm'
 			});
-			const userData = req.body;
+			const userData = { ...req.body };
 			userData.avatar = avatar;
 
 			//commented because password is now hash  using a pre middleware in the User model
@@ -176,15 +187,25 @@ router.post(
 				phone: userData.phone,
 				confirmPassword: userData.confirmPassword
 			});
-			console.log(createUser.id);
+
 			const payLoad = {
 				user: {
 					id: createUser.id
 				}
 			};
 			createUser.password = undefined;
+			createUser.__v = undefined;
 			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 				if (error) throw error;
+
+				const message = `Dear ${createUser.name.split(" ")[0]}, your Accout with EasyRent has been created successfully`;
+
+				await sendEmailWithNodeMailer({
+					email: user.email,
+					subject: 'Account created successfully',
+					message
+				});
+
 				return res.status(201).json({
 					status: 'success',
 					token,
@@ -204,12 +225,14 @@ router.post(
 // user login route
 router.post(
 	'/login',
+	limiter,
 	[
 		check('email', 'Email is required')
 			.not()
 			.notEmpty(),
 		check('password', 'Password required').exists()
 	],
+
 	async (req, res) => {
 		const errors = validationResult(req);
 		if (!errors.isEmpty()) {
@@ -234,7 +257,8 @@ router.post(
 					id: user.id
 				}
 			};
-			user.password = undefined;
+			user.password = undefined; //remove the password from what will be sent to the user
+			user.__v = undefined;
 			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 				if (error) throw error;
 
@@ -291,7 +315,7 @@ router.post('/forgot-password', async (req, res) => {
 
 		//send the reset password mail
 		try {
-			await sendEmail({
+			await sendEmailWithNodeMailer({
 				email: user.email,
 				subject: 'Your password reset token last for (5 minutes)',
 				message
@@ -300,7 +324,7 @@ router.post('/forgot-password', async (req, res) => {
 			//send route response
 			return res.status(200).json({
 				status: 'success',
-				message: `A password reset token has ben sent to your email address  ${user.email} `
+				message: `A password reset token has ben sent to your email address  ${user.email} token last for 10 minutes`
 			});
 		} catch (error) {
 			//if the is an error while sending resettoken mail, set both passwordResetToken ,passwordResetTokenExpires to undefined and save
@@ -429,7 +453,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 	}
 });
 
-//update other user data
+//update other user data by user
 router.patch('/update-me', authenticate, async (req, res) => {
 	try {
 		//find the user
@@ -450,7 +474,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 			return res.status(400).json({
 				status: 'Failed',
 				message:
-					'You cannot update password or role or confirmp password from this route'
+					'You cannot update password or role or confirm password from this route'
 			});
 		}
 
@@ -483,7 +507,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 	}
 });
 
-//modify user accout
+//modify user accout by admin
 router.patch('/:id', authenticate, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
