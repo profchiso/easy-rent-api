@@ -1,3 +1,5 @@
+//discovered that router cannot accept more than 10 endpoints
+
 const crypto = require('crypto');
 const express = require('express');
 const router = express.Router();
@@ -23,6 +25,8 @@ const limiter = rateLimit({
 });
 
 // get all users , restricted to admins and developers users
+
+//working fine
 router.get(
 	'/',
 	authenticate,
@@ -108,6 +112,7 @@ router.get(
 );
 
 //get single user, , restricted to admins and developers users
+//working fine
 router.get(
 	'/:id',
 	authenticate,
@@ -136,6 +141,7 @@ router.get(
 );
 
 //register a user
+//working fine
 router.post(
 	'/signup',
 	[
@@ -147,6 +153,7 @@ router.post(
 			.notEmpty(),
 		check('email', 'Invalid email').isEmail(),
 		check('password', 'Password required').notEmpty(),
+		check('confirmPassword', 'confirmPassword required').notEmpty(),
 		check('address', 'Address required ').notEmpty(),
 		check('phone', 'Phone number required')
 			.not()
@@ -185,7 +192,8 @@ router.post(
 				password: userData.password,
 				address: userData.address,
 				phone: userData.phone,
-				confirmPassword: userData.confirmPassword
+				confirmPassword: userData.confirmPassword,
+				role: userData.role
 			});
 
 			const payLoad = {
@@ -195,23 +203,31 @@ router.post(
 			};
 			createUser.password = undefined;
 			createUser.__v = undefined;
-			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
-				if (error) throw error;
+			createUser.role = undefined;
+			jwt.sign(
+				payLoad,
+				JWT_SECRET,
+				{ expiresIn: 3600 },
+				async (error, token) => {
+					if (error) throw error;
 
-				const message = `Dear ${createUser.name.split(" ")[0]}, your Accout with EasyRent has been created successfully`;
+					const message = `Dear ${
+						createUser.name.split(' ')[0]
+					}, your Accout with EasyRent has been created successfully`;
 
-				await sendEmailWithNodeMailer({
-					email: user.email,
-					subject: 'Account created successfully',
-					message
-				});
+					await sendEmailWithNodeMailer({
+						email: createUser.email,
+						subject: 'Account created successfully',
+						message
+					});
 
-				return res.status(201).json({
-					status: 'success',
-					token,
-					user: createUser
-				});
-			});
+					return res.status(201).json({
+						status: 'success',
+						token,
+						user: createUser
+					});
+				}
+			);
 		} catch (error) {
 			console.log(error);
 			return res.status(400).json({
@@ -223,6 +239,7 @@ router.post(
 );
 
 // user login route
+//working fine
 router.post(
 	'/login',
 	limiter,
@@ -259,14 +276,16 @@ router.post(
 			};
 			user.password = undefined; //remove the password from what will be sent to the user
 			user.__v = undefined;
+
 			jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 				if (error) throw error;
 
 				//  to send token as cookie to the browser  use the code below
-				res.cookie('jwt_token', token, {
-					secure: req.secure || req.headers('x-forwarded-proto') === 'https',
-					httpOnly: true,
-					expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) //expires in 90days
+
+				res.cookie('token', token, {
+					expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), //expires in 90days
+					httpOnly: true
+					// secure: req.secure || req.headers('x-forwarded-proto') === 'https' //used only in production
 				});
 
 				//end of code to send token as cookie
@@ -284,6 +303,7 @@ router.post(
 );
 
 //send reset password link route
+//working fine
 router.post('/forgot-password', async (req, res) => {
 	try {
 		const { email } = req.body;
@@ -346,6 +366,7 @@ router.post('/forgot-password', async (req, res) => {
 });
 
 //reset password route
+//working fine
 router.patch('/reset-password/:token', async (req, res) => {
 	try {
 		//get user base on the reset password token
@@ -399,6 +420,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 });
 
 //normal update password route
+//working fine
 router.patch('/update-password', authenticate, async (req, res) => {
 	//get the submitted password
 	const { oldPassword, newPassword, newConfirmPassword } = req.body;
@@ -454,6 +476,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 });
 
 //update other user data by user
+//working fine
 router.patch('/update-me', authenticate, async (req, res) => {
 	try {
 		//find the user
@@ -470,7 +493,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 
 		//more robust implementation
 		const { password, confirmPassword } = req.body;
-		if (password || role || confirmPassword) {
+		if (password || confirmPassword) {
 			return res.status(400).json({
 				status: 'Failed',
 				message:
@@ -483,6 +506,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 			'password',
 			'confirmPassword',
 			'role',
+
 			'passwordChangedAt',
 			'passwordResetToken',
 			'passwordResetTokenExpires'
@@ -507,7 +531,8 @@ router.patch('/update-me', authenticate, async (req, res) => {
 	}
 });
 
-//modify user accout by admin
+//modify user accout by user
+//working fine
 router.patch('/:id', authenticate, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
@@ -528,28 +553,36 @@ router.patch('/:id', authenticate, async (req, res) => {
 });
 
 //delete a user by admin
-router.delete('/:id', authenticate, authorize, async (req, res) => {
-	try {
-		await User.findByIdAndRemove(req.body.email);
-		return res.status(204).json({
-			status: 'success',
-			message: `User with the id ${req.body.email} has been deleted`
-		});
-	} catch (error) {
-		console.log(error);
-		return res.status(400).json({
-			status: 'failed',
-			error
-		});
-	}
-});
-
+//working fine  //commented route because router cannot take more than 10 routes/endpoints
+// router.delete('/:id', authenticate, authorize, async (req, res) => {
+// 	try {
+// 		await User.findByIdAndRemove(req.body.email);
+// 		return res.status(204).json({
+// 			status: 'success',
+// 			message: `User with the id ${req.body.email} has been deleted`
+// 		});
+// 	} catch (error) {
+// 		console.log(error);
+// 		return res.status(400).json({
+// 			status: 'failed',
+// 			error
+// 		});
+// 	}
+// });
 //route for a user to deactivated his account
 router.delete('/delete-me', authenticate, async (req, res) => {
+	console.log('delete route');
 	try {
-		await User.findByIdAndUpdate(req.user.id, {
-			isActiveUser: false
-		});
+		await User.findByIdAndUpdate(
+			req.user.id,
+			{
+				isActiveUser: false
+			},
+			{
+				new: true,
+				runValidators: true
+			}
+		);
 		return res.status(204).json({
 			status: 'success',
 			message: 'Acount deactivated successfully'
