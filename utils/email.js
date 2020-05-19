@@ -1,11 +1,14 @@
 const mailer = require('nodemailer');
+const sgMail = require('@sendgrid/mail');
 const sendgridTransport = require('nodemailer-sendgrid-transport');
+
 const EMAIL = process.env.EMAIL;
 const PASSWORD = process.env.EMAIL_PASSWORD;
 const EMAIL_HOST = process.env.EMAIL_HOST;
 const EMAIL_PORT = process.env.EMAIL_PORT;
 const SENDGRID_USERNAME = process.env.SENDGRID_USERNAME;
 const SENDGRID_PASSWORD = process.env.SENDGRID_PASSWORD;
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 
 exports.sendEmailWithNodeMailer = async (options) => {
 	try {
@@ -37,26 +40,44 @@ exports.sendEmailWithNodeMailer = async (options) => {
 	}
 };
 
-exports.sendEmailWithSendgrid = async () => {
+exports.sendEmailWithSendgrid = async (options) => {
+	sgMail.setApiKey(SENDGRID_API_KEY);
 	try {
-		const transporter = mailer.createTransport({
-			service: 'SendGrid',
-			auth: {
-				user: SENDGRID_USERNAME,
-				pass: SENDGRID_PASSWORD,
-			},
-		});
-
-		//define the options
 		const mailOptions = {
-			from: 'giftedbraintech <giftedbraintech@gamil.com>',
-			to: options.email,
+			from: options.from,
+			to: options.to,
 			subject: options.subject,
-			text: options.message,
-			//html:"to be handled later"
+			text: options.text,
+			html: options.html,
 		};
-		await transporter.sendMail(mailOptions);
+
+		await sgMail.send(mailOptions);
 	} catch (error) {
 		console.log(error);
+	}
+};
+
+exports.sendEmailWithMailgun = async (options) => {
+	try {
+		const API_KEY = process.env.MAILGUN;
+		const DOMAIN = process.env.MAILGUN_DOMAIN;
+		var mailgun = require('mailgun-js')({ apiKey: API_KEY, domain: DOMAIN });
+
+		const mailOptions = {
+			from: options.from,
+			to: options.to,
+			subject: options.subject,
+			text: options.text,
+			html: options.html,
+		};
+
+		await mailgun.messages().send(mailOptions, (error, body) => {
+			if (error) {
+				console.log('mail error', error);
+			}
+			console.log('mail body', body);
+		});
+	} catch (error) {
+		console.log('error from email sending', error);
 	}
 };
