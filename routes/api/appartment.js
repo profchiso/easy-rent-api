@@ -252,10 +252,13 @@ router.post(
 	authenticate,
 	[
 		check('houseName', 'houseName is requird').not().notEmpty(),
+		check('houseAddress', 'houseAddress is requird').not().notEmpty(),
 		check('state', 'state is requird').not().notEmpty(),
 		check('LGA', 'LGA is requird').not().notEmpty(),
-		check('LGA', 'LGA is requird').not().notEmpty(),
-		check('priceRange', 'priceRange is requird').not().notEmpty(),
+		check('minPrice', 'priceRange is requird').not().notEmpty(),
+		check('maxPrice', 'min price is requird').not().notEmpty(),
+		check('latitude', 'latitude is requird').not().notEmpty(),
+		check('longitude', 'longitude is requird').not().notEmpty(),
 	],
 	upload.fields([
 		{ name: 'houseImage', maxCount: 1 },
@@ -342,7 +345,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 	}
 });
 
-//delete an appartment, , restricted to admins developers and  users
+//delete an appartment, , restricted to admins
 router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
 	console.log('appment delete');
 	try {

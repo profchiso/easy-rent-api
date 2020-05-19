@@ -4,23 +4,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.authenticate = async (req, res, next) => {
 	try {
-		//formal implementation
-		// const bearerHeader = req.headers['authorization'];
-
-		// if (typeof bearerHeader !== 'undefined') {
-		// 	const bearer = bearerHeader.split(' ');
-		// 	const bearerToken = bearer[1];
-
-		// 	const decodeToken = jwt.verify(bearerToken, JWT_SECRET);
-		// 	req.user = decodeToken.user;
-		// 	next();
-		// } else {
-		// 	return res.status(401).json({
-		// 		status: 'Failed',
-		// 		message: 'Unauthorized request, No access token'
-		// 	});
-		// }
-
 		//more robust implementation
 		let token;
 
@@ -36,7 +19,7 @@ exports.authenticate = async (req, res, next) => {
 		if (!token) {
 			return res.status(401).json({
 				status: 'Failed',
-				message: 'Acesss denied, No authorization token'
+				message: 'Acesss denied, No authorization token',
 			});
 		}
 		//decode the acesss token
@@ -48,7 +31,7 @@ exports.authenticate = async (req, res, next) => {
 			return res.status(401).json({
 				status: 'Failed',
 				message:
-					'Acesss denied, User with the token might have been deleted or deactivated'
+					'Acesss denied, User with the token might have been deleted or deactivated',
 			});
 		}
 
@@ -57,20 +40,20 @@ exports.authenticate = async (req, res, next) => {
 			return res.status(401).json({
 				status: 'Failed',
 				message:
-					'You recently changed you password,Please re-login and  try again'
+					'You recently changed you password,Please re-login and  try again',
 			});
 		}
 
 		//Allow access to protected route
 		req.user = user;
-		// console.log(req.user);
+
 		next();
 	} catch (error) {
 		console.log(error);
 		res.status(401).json({
 			status: 'Failed',
 			error,
-			message: 'Invalid token'
+			message: 'Invalid token',
 		});
 	}
 };
@@ -80,7 +63,7 @@ exports.authorize = (...roles) => {
 		if (!roles.includes(req.user.role)) {
 			return res.status(403).json({
 				status: 'Failed',
-				message: 'Sorry you are not allowed to carry out this operation'
+				message: 'Sorry you are not allowed to carry out this operation',
 			});
 		}
 		//user is authorized

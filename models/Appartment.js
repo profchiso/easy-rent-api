@@ -3,21 +3,21 @@ const mongoose = require('mongoose');
 const appartmentSchema = new mongoose.Schema({
 	houseName: {
 		type: String,
-		required: true
+		required: true,
 	},
-	houseNumber: {
-		type: String
+	houseAddress: {
+		type: String,
 	},
 	houseType: {
-		type: String
+		type: String,
 	},
 	state: {
 		type: String,
-		required: true
+		required: true,
 	},
 	LGA: {
 		type: String,
-		required: true
+		required: true,
 	},
 	houseImage: String,
 
@@ -36,26 +36,30 @@ const appartmentSchema = new mongoose.Schema({
 	longitude: Number,
 	dateUploaded: {
 		type: Date,
-		default: Date.now()
+		default: Date.now(),
 	},
 	isRented: {
 		type: Boolean,
-		default: false
+		default: false,
 	},
-	priceRange: {
-		type: String,
-		required: true
+	minPrice: {
+		type: Number,
+		required: true,
+	},
+	maxPrice: {
+		type: Number,
+		required: true,
 	},
 	userId: String,
 	user: {
 		type: mongoose.Schema.ObjectId,
 		ref: 'user',
-		required: true
+		required: true,
 	},
 	isDeleted: {
 		type: Boolean,
-		default: false
-	}
+		default: false,
+	},
 });
 
 //pre middleware to populate the user field from the user collection
@@ -65,10 +69,10 @@ const appartmentSchema = new mongoose.Schema({
 // 	);
 // 	next();
 // });
-appartmentSchema.pre('/^find/', function(next) {
+appartmentSchema.pre('/^find/', function (next) {
 	this.populate({
 		path: 'user',
-		select: '-__v -role -createdAt'
+		select: '-__v -role -createdAt',
 	});
 });
 const Appartment = mongoose.model('appartment', appartmentSchema);
