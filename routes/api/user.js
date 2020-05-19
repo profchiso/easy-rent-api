@@ -9,10 +9,7 @@ const gravatar = require('gravatar');
 const bcrypt = require('bcryptjs');
 const rateLimit = require('express-rate-limit');
 const User = require('../../models/Users');
-const {
-	sendEmailWithNodeMailer,
-	sendEmailWithSendgrid
-} = require('../../utils/email');
+const { sendEmailWithNodeMailer } = require('../../utils/email');
 const { authenticate, authorize } = require('../../middlewares/auth');
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -21,7 +18,7 @@ const limiter = rateLimit({
 	max: 10, //max no of request per IP in the specified time
 	windowMs: 60 * 60 * 1000, //time allowed for the num of request(1h)
 	message:
-		'Maximum allowed login request in an hour exceeded, please try again in an hour time or try resetting your password' //
+		'Maximum allowed login request in an hour exceeded, please try again in an hour time or try resetting your password', //
 });
 
 // get all users , restricted to admins and developers users
@@ -88,7 +85,7 @@ router.get(
 					return res.status(404).json({
 						status: 'failed',
 						result: 0,
-						message: 'This page does not exits'
+						message: 'This page does not exits',
 					});
 				}
 			}
@@ -99,13 +96,13 @@ router.get(
 			return res.status(200).json({
 				status: 'success',
 				result: users.length,
-				users
+				users,
 			});
 		} catch (error) {
 			console.log(error);
 			return res.status(400).json({
 				status: 'Failed',
-				error
+				error,
 			});
 		}
 	}
@@ -123,18 +120,18 @@ router.get(
 			if (!user) {
 				return res.status(404).json({
 					status: 'Failed',
-					message: `No user with the id ${req.params.id}`
+					message: `No user with the id ${req.params.id}`,
 				});
 			}
 			return res.status(200).json({
 				status: 'success',
-				user
+				user,
 			});
 		} catch (error) {
 			console.log(error);
 			return res.status(400).json({
 				ststus: 'failed',
-				error
+				error,
 			});
 		}
 	}
@@ -145,19 +142,13 @@ router.get(
 router.post(
 	'/signup',
 	[
-		check('name', 'Name  is requird')
-			.not()
-			.notEmpty(),
-		check('email', 'Email is required')
-			.not()
-			.notEmpty(),
+		check('name', 'Name  is requird').not().notEmpty(),
+		check('email', 'Email is required').not().notEmpty(),
 		check('email', 'Invalid email').isEmail(),
 		check('password', 'Password required').notEmpty(),
 		check('confirmPassword', 'confirmPassword required').notEmpty(),
 		check('address', 'Address required ').notEmpty(),
-		check('phone', 'Phone number required')
-			.not()
-			.notEmpty()
+		check('phone', 'Phone number required').not().notEmpty(),
 	],
 	async (req, res) => {
 		const errors = validationResult(req.body);
@@ -170,13 +161,13 @@ router.post(
 			if (user) {
 				return res.status(400).json({
 					status: 'failed',
-					message: 'user already exist!'
+					message: 'user already exist!',
 				});
 			}
 			const avatar = gravatar.url(email, {
 				s: '200',
 				r: 'pg',
-				d: 'mm'
+				d: 'mm',
 			});
 			const userData = { ...req.body };
 			userData.avatar = avatar;
@@ -193,13 +184,13 @@ router.post(
 				address: userData.address,
 				phone: userData.phone,
 				confirmPassword: userData.confirmPassword,
-				role: userData.role
+				role: userData.role,
 			});
 
 			const payLoad = {
 				user: {
-					id: createUser.id
-				}
+					id: createUser.id,
+				},
 			};
 			createUser.password = undefined;
 			createUser.__v = undefined;
@@ -215,16 +206,84 @@ router.post(
 						createUser.name.split(' ')[0]
 					}, your Accout with EasyRent has been created successfully`;
 
-					await sendEmailWithSendgrid({
-						email: createUser.email,
+					const mailOptions = {
+						from: 'giftedbraintechblog <giftedbraintech@gamil.com>',
+						to: createUser.email,
 						subject: 'Account created successfully',
-						message
-					});
+						text: `Dear ${
+							createUser.name.split(' ')[0]
+						}, thank you for subscribing to GiftedBrain Blog, you will never miss any of our newly published tech article`,
+						html: `<div>
+						<div  style="background-color:#f3f3f3; text-align:center">
+											<div>
+												<img src="http://www.giftedbraintech.com/img/giftedbrain_favicon.png" width="64" height="64"/>
+											</div>
+											<div style="padding=0px">
+												<h3 style="padding=0px">Gifted<span style="color:#d0003c">Brain </span> Tech</h3>
+											</div>
+											<div style="padding=0px; padding-bottom:10px">
+												<h5 style="padding=5px"><em>Building reliable technologies</em></h5>
+											</div>
+										</div>
+						
+						<div><p>Welecome ${
+							createUser.name.split(' ')[0]
+						} to GiftedBrainTech Blog</p></div>
+						<div>${message}</div>
+				
+						<div>Follow giftedbraintech  on</div>
+									<div style="background-color:#333;text-align:center;">
+										<div style="display:inline-block ; padding-right:10px">
+											<a href="https://twitter.com/GiftedbrainTech" target="_blank">
+												<img
+													title="Share with a friend"
+													src="http://www.giftedbraintech.com/img/twitter.png"
+													alt="twitter"
+												
+													width="24"
+													height="24"
+												/>
+											</a>
+										</div>
+										<div style="display:inline-block; padding-right:10px">
+											<a href="https://fb.me/GiftedBrainTech" target="_blank">
+												<img
+													title="Share with a friend"
+													src="http://www.giftedbraintech.com/img/facebook.png"
+													alt="facebook"
+													
+													width="24"
+													height="24"
+												/>
+											</a>
+										</div>
+										<div  style="display:inline-block; padding-right:10px">
+											<a href="https://www.linkedin.com/in/giftedbraintech/" target="_blank">
+												<img
+													title="Share with a friend"
+													src="http://www.giftedbraintech.com/img/linkedin.png"
+													alt="whatsapp"
+													
+													width="24"
+													height="24"
+												/>
+											</a>
+										</div>
+									</div>
+									
+										<div style="background-color:#333; color:#fff;text-align:center;padding:20px 10px">
+											&copy; Copyright <strong>GiftedBrain Tech</strong> 2018 - 2020. All
+											Rights Reserved
+										</div>
+						</div>`,
+					};
+
+					await sendEmailWithNodeMailer(mailOptions);
 
 					return res.status(201).json({
 						status: 'success',
 						token,
-						user: createUser
+						user: createUser,
 					});
 				}
 			);
@@ -232,7 +291,7 @@ router.post(
 			console.log(error);
 			return res.status(400).json({
 				status: 'failed',
-				error
+				error,
 			});
 		}
 	}
@@ -244,10 +303,8 @@ router.post(
 	'/login',
 	limiter,
 	[
-		check('email', 'Email is required')
-			.not()
-			.notEmpty(),
-		check('password', 'Password required').exists()
+		check('email', 'Email is required').not().notEmpty(),
+		check('password', 'Password required').exists(),
 	],
 
 	async (req, res) => {
@@ -255,7 +312,7 @@ router.post(
 		if (!errors.isEmpty()) {
 			return res.status(400).json({
 				status: 'Failed',
-				error: errors.array()
+				error: errors.array(),
 			});
 		}
 		const { email, password } = req.body;
@@ -265,14 +322,14 @@ router.post(
 			if (!user || !(await user.isMatchPassword(password, user.password))) {
 				return res.status(401).json({
 					status: 'Failed',
-					message: 'Invalid user credentials'
+					message: 'Invalid user credentials',
 				});
 			}
 
 			const payLoad = {
 				user: {
-					id: user.id
-				}
+					id: user.id,
+				},
 			};
 			user.password = undefined; //remove the password from what will be sent to the user
 			user.__v = undefined;
@@ -284,7 +341,7 @@ router.post(
 
 				res.cookie('token', token, {
 					expires: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000), //expires in 90days
-					httpOnly: true
+					httpOnly: true,
 					// secure: req.secure || req.headers('x-forwarded-proto') === 'https' //used only in production
 				});
 
@@ -292,7 +349,7 @@ router.post(
 				return res.status(200).json({
 					status: 'success',
 					token,
-					user
+					user,
 				});
 			});
 		} catch (error) {
@@ -310,14 +367,14 @@ router.post('/forgot-password', async (req, res) => {
 		if (!email) {
 			return res.status(400).json({
 				status: 'Failed',
-				message: `No email was provided, Please provide a valid email`
+				message: `No email was provided, Please provide a valid email`,
 			});
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
 			return res.status(404).json({
 				status: 'Failed',
-				message: `No user with the provided email ${email}`
+				message: `No user with the provided email ${email}`,
 			});
 		}
 		//get the reset token from the instance middleware in the User model
@@ -335,16 +392,82 @@ router.post('/forgot-password', async (req, res) => {
 
 		//send the reset password mail
 		try {
-			await sendEmailWithSendgrid({
-				email: user.email,
+			const mailOptions = {
+				from: 'giftedbraintechblog <giftedbraintech@gamil.com>',
+				to: user.email,
 				subject: 'Your password reset token last for (5 minutes)',
-				message
-			});
+				text: `Dear ${
+					user.name.split(' ')[0]
+				}, thank you for subscribing to GiftedBrain Blog, you will never miss any of our newly published tech article`,
+				html: `<div>
+				<div  style="background-color:#f3f3f3; text-align:center">
+									<div>
+										<img src="http://www.giftedbraintech.com/img/giftedbrain_favicon.png" width="64" height="64"/>
+									</div>
+									<div style="padding=0px">
+										<h3 style="padding=0px">Gifted<span style="color:#d0003c">Brain </span> Tech</h3>
+									</div>
+									<div style="padding=0px; padding-bottom:10px">
+										<h5 style="padding=5px"><em>Building reliable technologies</em></h5>
+									</div>
+								</div>
+				
+				<div><p>Welecome ${user.name.split(' ')[0]} to GiftedBrainTech Blog</p></div>
+				<div>${message}</div>
+		
+				<div>Follow giftedbraintech  on</div>
+							<div style="background-color:#333;text-align:center;">
+								<div style="display:inline-block ; padding-right:10px">
+									<a href="https://twitter.com/GiftedbrainTech" target="_blank">
+										<img
+											title="Share with a friend"
+											src="http://www.giftedbraintech.com/img/twitter.png"
+											alt="twitter"
+										
+											width="24"
+											height="24"
+										/>
+									</a>
+								</div>
+								<div style="display:inline-block; padding-right:10px">
+									<a href="https://fb.me/GiftedBrainTech" target="_blank">
+										<img
+											title="Share with a friend"
+											src="http://www.giftedbraintech.com/img/facebook.png"
+											alt="facebook"
+											
+											width="24"
+											height="24"
+										/>
+									</a>
+								</div>
+								<div  style="display:inline-block; padding-right:10px">
+									<a href="https://www.linkedin.com/in/giftedbraintech/" target="_blank">
+										<img
+											title="Share with a friend"
+											src="http://www.giftedbraintech.com/img/linkedin.png"
+											alt="whatsapp"
+											
+											width="24"
+											height="24"
+										/>
+									</a>
+								</div>
+							</div>
+							
+								<div style="background-color:#333; color:#fff;text-align:center;padding:20px 10px">
+									&copy; Copyright <strong>GiftedBrain Tech</strong> 2018 - 2020. All
+									Rights Reserved
+								</div>
+				</div>`,
+			};
+
+			await sendEmailWithNodeMailer(mailOptions);
 
 			//send route response
 			return res.status(200).json({
 				status: 'success',
-				message: `A password reset token has ben sent to your email address  ${user.email} token last for 10 minutes`
+				message: `A password reset token has ben sent to your email address  ${user.email} token last for 10 minutes`,
 			});
 		} catch (error) {
 			//if the is an error while sending resettoken mail, set both passwordResetToken ,passwordResetTokenExpires to undefined and save
@@ -353,14 +476,14 @@ router.post('/forgot-password', async (req, res) => {
 			await user.save({ validateBeforeSave: false });
 			return res.status(500).json({
 				status: 'Failed',
-				message: 'There was an error sending the email please try again later'
+				message: 'There was an error sending the email please try again later',
 			});
 		}
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
-			message: error
+			message: error,
 		});
 	}
 });
@@ -372,14 +495,11 @@ router.patch('/reset-password/:token', async (req, res) => {
 		//get user base on the reset password token
 		const { token } = req.params;
 		const { password, confirmPassword } = req.body;
-		const hashedToken = crypto
-			.createHash('sha256')
-			.update(token)
-			.digest('hex');
+		const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 		//check if there is user with the hashedtoken and also if the token has not expired
 		const user = await User.findOne({
 			passwordResetToken: hashedToken,
-			passwordResetTokenExpires: { $gt: Date.now() }
+			passwordResetTokenExpires: { $gt: Date.now() },
 		}).select(
 			'+password +confirmPassword +passwordResetToken +passwordResetTokenExpires'
 		);
@@ -387,7 +507,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 		if (!user) {
 			return res.status(400).json({
 				status: 'failed',
-				message: 'Token invalid or has expires'
+				message: 'Token invalid or has expires',
 			});
 		}
 		//update user data and save
@@ -400,21 +520,21 @@ router.patch('/reset-password/:token', async (req, res) => {
 		//log user in by assigning hin a token
 		const payLoad = {
 			user: {
-				id: user.id
-			}
+				id: user.id,
+			},
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
 			return res.status(200).json({
 				status: 'success',
-				token
+				token,
 			});
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
-			message: error
+			message: error,
 		});
 	}
 });
@@ -432,7 +552,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!user) {
 			return res.status(404).json({
 				status: 'Failed',
-				message: 'User not found'
+				message: 'User not found',
 			});
 		}
 
@@ -444,7 +564,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!passwordIsMatch) {
 			return res.status(401).json({
 				status: 'Failed',
-				message: 'The password you entered is incorrect'
+				message: 'The password you entered is incorrect',
 			});
 		}
 		user.password = newPassword;
@@ -456,21 +576,21 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		//log user in by assigning him a token
 		const payLoad = {
 			user: {
-				id: user.id
-			}
+				id: user.id,
+			},
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
 			return res.status(200).json({
 				status: 'success',
-				token
+				token,
 			});
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
-			error
+			error,
 		});
 	}
 });
@@ -497,7 +617,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 			return res.status(400).json({
 				status: 'Failed',
 				message:
-					'You cannot update password or role or confirm password from this route'
+					'You cannot update password or role or confirm password from this route',
 			});
 		}
 
@@ -509,24 +629,24 @@ router.patch('/update-me', authenticate, async (req, res) => {
 
 			'passwordChangedAt',
 			'passwordResetToken',
-			'passwordResetTokenExpires'
+			'passwordResetTokenExpires',
 		];
 
 		excludedFields.forEach((field) => delete updatedata[field]); //exclude the password,confirmpassword,role field  etc from update data
 		const user = await User.findByIdAndUpdate(req.user.id, updatedata, {
 			new: true,
-			runValidators: true
+			runValidators: true,
 		});
 		return res.status(200).json({
 			status: 'success',
-			user
+			user,
 		});
 		//send the updated user data
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
-			error
+			error,
 		});
 	}
 });
@@ -537,17 +657,17 @@ router.patch('/:id', authenticate, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
 			new: true,
-			runValidators: true
+			runValidators: true,
 		}).select('-password');
 		return res.status(200).json({
 			status: 'success',
-			user: updatedUser
+			user: updatedUser,
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'failed',
-			error
+			error,
 		});
 	}
 });
@@ -576,22 +696,22 @@ router.delete('/delete-me', authenticate, async (req, res) => {
 		await User.findByIdAndUpdate(
 			req.user.id,
 			{
-				isActiveUser: false
+				isActiveUser: false,
 			},
 			{
 				new: true,
-				runValidators: true
+				runValidators: true,
 			}
 		);
 		return res.status(204).json({
 			status: 'success',
-			message: 'Acount deactivated successfully'
+			message: 'Acount deactivated successfully',
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
-			error
+			error,
 		});
 	}
 });
