@@ -53,6 +53,9 @@ app.use(xss());
 app.use(hpp({ whitelist: [] })); // use the whitelist option to specify some parameter that you want to allow duplicate in the array
 
 //routes
+app.get("/",(req,res)=>{
+	res.status(200).send("welcome to easy rent api")
+})
 app.use('/easy-rent/api/v1/users', userRoute); //users route
 app.use('/easy-rent/api/v1/appartment', appartmentRoute); //appartment route
 // app.use('/easy-rent/api/v1/auth', authRoute);
