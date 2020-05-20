@@ -13,7 +13,7 @@ const bodyParser = require('body-parser');
 const connectToDB = require('./controllers/dbController');
 const userRoute = require('./routes/api/user');
 const appartmentRoute = require('./routes/api/appartment');
-const authRoute = require('./routes/api/auth');
+
 const undefinedRoutes = require('./routes/api/404-routes');
 
 connectToDB(); //function to connect to database
