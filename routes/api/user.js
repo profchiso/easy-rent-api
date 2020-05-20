@@ -22,7 +22,6 @@ const limiter = rateLimit({
 });
 
 // get all users , restricted to admins and developers users
-
 //working fine
 router.get(
 	'/',
@@ -212,7 +211,7 @@ router.post(
 						subject: 'Account created successfully',
 						text: `Dear ${
 							createUser.name.split(' ')[0]
-						}, thank you for subscribing to GiftedBrain Blog, you will never miss any of our newly published tech article`,
+						},your account has been successfully created`,
 						html: `<div>
 						<div  style="background-color:#f3f3f3; text-align:center">
 											<div>
@@ -393,12 +392,12 @@ router.post('/forgot-password', async (req, res) => {
 		//send the reset password mail
 		try {
 			const mailOptions = {
-				from: 'giftedbraintechblog <giftedbraintech@gamil.com>',
+				from: 'giftedbraintech@gamil.com',
 				to: user.email,
-				subject: 'Your password reset token last for (5 minutes)',
+				subject: 'Password reset token (last for 5 minutes)',
 				text: `Dear ${
 					user.name.split(' ')[0]
-				}, thank you for subscribing to GiftedBrain Blog, you will never miss any of our newly published tech article`,
+				}, ${message}`,
 				html: `<div>
 				<div  style="background-color:#f3f3f3; text-align:center">
 									<div>
@@ -412,7 +411,7 @@ router.post('/forgot-password', async (req, res) => {
 									</div>
 								</div>
 				
-				<div><p>Welecome ${user.name.split(' ')[0]} to GiftedBrainTech Blog</p></div>
+				<div><p>Password reset token </p></div>
 				<div>${message}</div>
 		
 				<div>Follow giftedbraintech  on</div>
@@ -492,7 +491,7 @@ router.post('/forgot-password', async (req, res) => {
 //working fine
 router.patch('/reset-password/:token', async (req, res) => {
 	try {
-		//get user base on the reset password token
+		//get user base on the reset password token sent to their mail
 		const { token } = req.params;
 		const { password, confirmPassword } = req.body;
 		const hashedToken = crypto.createHash('sha256').update(token).digest('hex');

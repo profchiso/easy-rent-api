@@ -1,11 +1,12 @@
 {
-	"name": "easy-rent",
+	"name": "easy-rent-api",
 	"version": "1.0.0",
 	"description": "Easy rent extensive API for, providing appartment available for rent  data in the whole of Nigeria",
 	"main": "app.js",
 	"scripts": {
 		"DEV": "nodemon app.js",
-		"PROD": "node app.js"
+		"PROD": "node app.js",
+		"start": "node app.js"
 	},
 	"author": "Okorie Chinedu sunday",
 	"license": "MIT",

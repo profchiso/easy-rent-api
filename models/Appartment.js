@@ -22,16 +22,6 @@ const appartmentSchema = new mongoose.Schema({
 	houseImage: String,
 
 	images: [String],
-
-	// gps: {
-	// 	type: {
-	// 		type: String,
-	// 		default: 'Point',
-	// 		enum: 'Point'
-	// 	},
-	// 	coodinate: [Number],
-	// 	address: String
-	// },
 	latitude: Number,
 	longitude: Number,
 	dateUploaded: {

@@ -273,7 +273,7 @@ router.post(
 			req.body.user = req.user.id;
 			if (req.files.houseImage || req.files.images) {
 				//process house image
-				req.body.houseImage = `http://www.easy-rent-api.com/img/appartment-img/${
+				req.body.houseImage = `http://www.easy-rent-api/house-img/${
 					req.user.id
 				}-${req.files.houseImage[0].fieldname}-${Date.now()}.jpeg`;
 
@@ -281,13 +281,13 @@ router.post(
 					.resize(2000, 1333)
 					.toFormat('jpeg')
 					.jpeg({ quality: 90 })
-					.toFile(`public/img/appartment-img/${req.body.houseImage}`);
+					.toFile(`public/house-img/${req.body.houseImage}`);
 
 				//process other images
 				req.body.images = [];
 				await Promise.all(
 					req.files.images.map(async (image, i) => {
-						const fileName = `http://www.easy-rent-api.com/img/appartment-img/${
+						const fileName = `http://www.easy-rent-api/house-img/${
 							req.user.id
 						}-${image.fieldname}-${Date.now()}-${i + 1}.jpeg`;
 
@@ -295,7 +295,7 @@ router.post(
 							.resize(2000, 1333)
 							.toFormat('jpeg')
 							.jpeg({ quality: 90 })
-							.toFile(`public/img/appartment-img/${fileName}`);
+							.toFile(`public/house-img/${fileName}`);
 
 						req.body.images.push(fileName);
 					})
