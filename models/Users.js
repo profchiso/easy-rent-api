@@ -16,6 +16,11 @@ const userSchema = new mongoose.Schema({
 		lowercase: true,
 		validate: [validator.isEmail, 'Invalid email']
 	},
+	phone: {
+		type: String,
+		required: ['true', 'Please provide a valid  mobile number'],
+		min: ['11', 'Mobile number must be 11 digit']
+	},
 	password: {
 		type: String,
 		required: true,
@@ -36,14 +41,10 @@ const userSchema = new mongoose.Schema({
 	passwordChangedAt: Date,
 	address: {
 		type: String,
-		required: ['true', 'Please provide a valid address'],
+		// required: ['true', 'Please provide a valid address'],
 		trim: true
 	},
-	phone: {
-		type: String,
-		required: ['true', 'Please provide a valid  mobile number'],
-		min: ['11', 'Mobile number must be 11 digit']
-	},
+	
 	avatar: String,
 	createdAt: {
 		type: Date,
@@ -64,8 +65,8 @@ const userSchema = new mongoose.Schema({
 	},
 	isActiveUser: {
 		type: Boolean,
-		default: true,
-		select: false
+		default: false,
+		
 	}
 });
 

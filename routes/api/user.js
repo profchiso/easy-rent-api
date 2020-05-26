@@ -144,10 +144,11 @@ router.post(
 		check('name', 'Name  is requird').not().notEmpty(),
 		check('email', 'Email is required').not().notEmpty(),
 		check('email', 'Invalid email').isEmail(),
+		check('phone', 'Phone number required').not().notEmpty(),
 		check('password', 'Password required').notEmpty(),
 		check('confirmPassword', 'confirmPassword required').notEmpty(),
-		check('address', 'Address required ').notEmpty(),
-		check('phone', 'Phone number required').not().notEmpty(),
+
+		
 	],
 	async (req, res) => {
 		const errors = validationResult(req.body);
@@ -206,7 +207,7 @@ router.post(
 					}, your Accout with EasyRent has been created successfully`;
 
 					const mailOptions = {
-						from: 'giftedbraintechblog <giftedbraintech@gamil.com>',
+						from: 'giftedbraintech@gmail.com',
 						to: createUser.email,
 						subject: 'Account created successfully',
 						text: `Dear ${
@@ -392,7 +393,7 @@ router.post('/forgot-password', async (req, res) => {
 		//send the reset password mail
 		try {
 			const mailOptions = {
-				from: 'giftedbraintech@gamil.com',
+				from: 'giftedbraintech@gmail.com',
 				to: user.email,
 				subject: 'Password reset token (last for 5 minutes)',
 				text: `Dear ${
@@ -466,7 +467,7 @@ router.post('/forgot-password', async (req, res) => {
 			//send route response
 			return res.status(200).json({
 				status: 'success',
-				message: `A password reset token has ben sent to your email address  ${user.email} token last for 10 minutes`,
+				message: `A password reset token has ben sent to your email address  ${user.email}, Login to you email to reset your password(token last for 10 minutes)`,
 			});
 		} catch (error) {
 			//if the is an error while sending resettoken mail, set both passwordResetToken ,passwordResetTokenExpires to undefined and save
@@ -611,8 +612,8 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		//update user data
 
 		//more robust implementation
-		const { password, confirmPassword } = req.body;
-		if (password || confirmPassword) {
+		const { password, confirmPassword ,role} = req.body;
+		if (password || confirmPassword || role) {
 			return res.status(400).json({
 				status: 'Failed',
 				message:
@@ -632,6 +633,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		];
 
 		excludedFields.forEach((field) => delete updatedata[field]); //exclude the password,confirmpassword,role field  etc from update data
+		updatedata.isActiveUser=true
 		const user = await User.findByIdAndUpdate(req.user.id, updatedata, {
 			new: true,
 			runValidators: true,
