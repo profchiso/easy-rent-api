@@ -318,7 +318,14 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			console.log(User.find({}))
+			let u= await User.find({})
+			if(u){
+			return res.status(400).json({
+				status: 'Failed',
+				message: 'Invalid user credentials',
+				user:u
+			});
+		}
 			const user = await User.find({email }).select('+password');
 			console.log("user",user)
 
