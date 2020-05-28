@@ -31,6 +31,7 @@ router.get(
 		//this route can take parameters pass it by ?param=value
 
 		try {
+			const apiError={}
 			// console.log(req.query);
 			let requestQueryObject = { ...req.query }; //make a copy of the req.query object
 
@@ -81,11 +82,9 @@ router.get(
 			if (req.query.page) {
 				let numberOfDocument = await User.countDocuments();
 				if (skip >= numberOfDocument) {
-					return res.status(404).json({
-						status: 'failed',
-						result: 0,
-						message: 'This page does not exits',
-					});
+					apiError.errMessage="This page does not exits"
+					apiError.statusCode=404
+					return res.status(404).json(apiError);
 				}
 			}
 
@@ -115,12 +114,12 @@ router.get(
 	authorize('admin', 'developer'),
 	async (req, res) => {
 		try {
+			const apiError={}
 			const user = await User.findById(req.params.id).select('-__v');
 			if (!user) {
-				return res.status(404).json({
-					status: 'Failed',
-					message: `No user with the id ${req.params.id}`,
-				});
+					apiError.errMessage=`No user with the id ${req.params.id}`
+					apiError.statusCode=404
+					return res.status(404).json(apiError);
 			}
 			return res.status(200).json({
 				status: 'success',
@@ -152,17 +151,18 @@ router.post(
 	],
 	async (req, res) => {
 		const errors = validationResult(req.body);
+		
 		if (!errors.isEmpty()) {
 			return res.status(400).json({ status: 'Failed', errors: errors.array() });
 		}
 		try {
 			const { email } = req.body;
+			const apiError={}
 			const user = await User.findOne({ email });
 			if (user) {
-				return res.status(400).send({
-					status: 'failed',
-					message: 'user already exist!',
-				});
+				apiError.errMessage="user already exist!"
+				apiError.statusCode=400
+				return res.status(400).json(apiError);
 			}
 			const avatar = gravatar.url(email, {
 				s: '200',
@@ -310,7 +310,9 @@ router.post(
 
 	async (req, res) => {
 		const errors = validationResult(req.body); // pass req.body for form data validation but for json, just pass req;
+		const apiError={}
 		if (!errors.isEmpty()) {
+				
 			return res.status(400).json({
 				status: 'Failed',
 				error: errors.array(),
@@ -323,18 +325,15 @@ router.post(
 			console.log("user",user)
 
 			if(!user){
-				return res.status(400).send({
-					status: 'Failed',
-					message: 'Invalid user credentials',
-				});
+				apiError.errMessage="Invalid user credentials"
+				apiError.statusCode=400
+				return res.status(400).json(apiError);
 			}
 
 			if (!(await user.isMatchPassword(password, user.password))) {
-				console.log("password mismatch")
-				return res.status(400).json({
-					status: 'Failed',
-					message: 'Invalid user credentials',
-				});
+				apiError.errMessage="Invalid user credentials"
+				apiError.statusCode=400
+				return res.status(400).json(apiError);
 			}
 
 			const payLoad = {
@@ -375,18 +374,18 @@ router.post(
 router.post('/forgot-password', async (req, res) => {
 	try {
 		const { email } = req.body;
+		const apiError={}
 		if (!email) {
-			return res.status(400).json({
-				status: 'Failed',
-				message: `No email was provided, Please provide a valid email`,
-			});
+			   apiError.errMessage="Invalid user credentials"
+				apiError.statusCode=400
+				return res.status(400).json(apiError);
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
-			return res.status(404).json({
-				status: 'Failed',
-				message: `No user with the provided email ${email}`,
-			});
+			apiError.errMessage=`No user with the provided email ${email}`
+			apiError.statusCode=400
+			return res.status(400).json(apiError);
+		
 		}
 		//get the reset token from the instance middleware in the User model
 		const resetPasswordToken = user.generatePasswordResetToken();
@@ -505,6 +504,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 	try {
 		//get user base on the reset password token sent to their mail
 		const { token } = req.params;
+		const apiError={}
 		const { password, confirmPassword } = req.body;
 		const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 		//check if there is user with the hashedtoken and also if the token has not expired
@@ -516,10 +516,9 @@ router.patch('/reset-password/:token', async (req, res) => {
 		);
 		//if no user is found
 		if (!user) {
-			return res.status(400).json({
-				status: 'failed',
-				message: 'Token invalid or has expires',
-			});
+			apiError.errMessage=`Token invalid or has expires`
+			apiError.statusCode=400
+			return res.status(400).json(apiError);	
 		}
 		//update user data and save
 		user.password = password;
@@ -555,16 +554,18 @@ router.patch('/reset-password/:token', async (req, res) => {
 router.patch('/update-password', authenticate, async (req, res) => {
 	//get the submitted password
 	const { oldPassword, newPassword, newConfirmPassword } = req.body;
+	const apiError={}
 	try {
 		//get the user from the user collection
 		let user = await User.findById(req.user.id).select(
 			'+password +confirmPassword'
 		);
 		if (!user) {
-			return res.status(404).json({
-				status: 'Failed',
-				message: 'User not found',
-			});
+			apiError.errMessage=`User not found`
+			apiError.statusCode=404
+			return res.status(404).json(apiError);	
+			
+			
 		}
 
 		// check if passwaord matches the one in the database
@@ -573,10 +574,9 @@ router.patch('/update-password', authenticate, async (req, res) => {
 			user.password
 		);
 		if (!passwordIsMatch) {
-			return res.status(401).json({
-				status: 'Failed',
-				message: 'The password you entered is incorrect',
-			});
+			apiError.errMessage=`The password you entered is incorrect`
+			apiError.statusCode=401
+			return res.status(401).json(apiError);	
 		}
 		user.password = newPassword;
 		user.confirmPassword = newConfirmPassword;
@@ -624,12 +624,11 @@ router.patch('/update-me', authenticate, async (req, res) => {
 
 		//more robust implementation
 		const { password, confirmPassword ,role} = req.body;
+		const apiError={}
 		if (password || confirmPassword || role) {
-			return res.status(400).json({
-				status: 'Failed',
-				message:
-					'You cannot update password or role or confirm password from this route',
-			});
+			apiError.errMessage=`You cannot update password or role or confirm password from this route`
+			apiError.statusCode=400
+			return res.status(400).json(apiError);	
 		}
 
 		let updatedata = { ...req.body };
