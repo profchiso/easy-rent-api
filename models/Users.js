@@ -132,5 +132,5 @@ userSchema.pre(/^find/, function(next) {
 	this.find({ isActiveUser: { $ne: false } }); //return only active users
 	next();
 });
-const User = mongoose.model('user', userSchema);
+const User = mongoose.model('User', userSchema);
 module.exports = User;

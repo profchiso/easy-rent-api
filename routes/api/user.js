@@ -6,7 +6,7 @@ const router = express.Router();
 const { check, validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const gravatar = require('gravatar');
-const bcrypt = require('bcryptjs');
+
 const rateLimit = require('express-rate-limit');
 const User = require('../../models/Users');
 const { sendEmailWithNodeMailer } = require('../../utils/email');
@@ -318,15 +318,8 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			let u= await User.find({})
-			if(u){
-			return res.status(400).json({
-				status: 'Failed',
-				message: 'Invalid user credentials',
-				user:u
-			});
-		}
-			const user = await User.find({email }).select('+password');
+			
+			const user = await User.findOne({email }).select('+password');
 			console.log("user",user)
 
 			if(!user){
@@ -336,7 +329,7 @@ router.post(
 				});
 			}
 
-			if (!(await user.isMatchPassword(password, user[0].password))) {
+			if (!(await user.isMatchPassword(password, user.password))) {
 				console.log("password mismatch")
 				return res.status(400).json({
 					status: 'Failed',

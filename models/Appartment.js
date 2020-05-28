@@ -65,5 +65,5 @@ appartmentSchema.pre('/^find/', function (next) {
 		select: '-__v -role -createdAt',
 	});
 });
-const Appartment = mongoose.model('appartment', appartmentSchema);
+const Appartment = mongoose.model('Appartment', appartmentSchema);
 module.exports = Appartment;
