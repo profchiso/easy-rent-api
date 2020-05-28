@@ -129,7 +129,7 @@ userSchema.methods.generatePasswordResetToken = function() {
 
 // query middleware to not return user with isActiveUser=== false
 userSchema.pre(/^find/, function(next) {
-	this.find({ isActiveUser: { $ne: false } }); //return only active users
+	// this.find({ isActiveUser: { $ne: false } }); //return only active users
 	next();
 });
 const User = mongoose.model('User', userSchema);
