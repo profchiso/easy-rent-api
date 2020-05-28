@@ -485,7 +485,7 @@ router.post('/forgot-password', async (req, res) => {
 			//send route response
 			return res.json({
 				status: 'success',
-				message: `A password reset token has ben sent to your email address  ${user.email}, Login to you email to reset your password(token last for 10 minutes)`,
+				errMessage: `A password reset token has ben sent to your email address  ${user.email}`,
 				statusCode:200
 			});
 		} catch (error) {
@@ -547,6 +547,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 			return res.json({
 				status: 'success',
 				token,
+				errMessage:"Check email for reset token",
 				statusCode:200
 			});
 		});
