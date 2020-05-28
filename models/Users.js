@@ -92,6 +92,7 @@ userSchema.methods.isMatchPassword = async function(
 	enteredPassword,
 	userpassword
 ) {
+	console.log("password check",bcrypt.compare(enteredPassword, userpassword))
 	return await bcrypt.compare(enteredPassword, userpassword);
 };
 

@@ -214,7 +214,7 @@ router.post(
 							createUser.name.split(' ')[0]
 						},your account has been successfully created`,
 						html: `<div>
-						<div  style="background-color:#f3f3f3; text-align:center">
+						<div  style="background-color:#f3f3f3; text-align:center;padding:10px">
 											<div>
 												<img src="http://www.giftedbraintech.com/img/giftedbrain_favicon.png" width="64" height="64"/>
 											</div>
@@ -230,9 +230,10 @@ router.post(
 							createUser.name.split(' ')[0]
 						} to GiftedBrainTech Blog</p></div>
 						<div>${message}</div>
+						<div>Login to your account and update your profile so you can start uploading your appartments for rent</div>
 				
 						<div>Follow giftedbraintech  on</div>
-									<div style="background-color:#333;text-align:center;">
+									<div style="background-color:#333;text-align:center; padding:10px">
 										<div style="display:inline-block ; padding-right:10px">
 											<a href="https://twitter.com/GiftedbrainTech" target="_blank">
 												<img
@@ -318,9 +319,19 @@ router.post(
 		const { email, password } = req.body;
 		try {
 			const user = await User.findOne({ email }).select('+password');
+			console.log("user",user)
 
-			if (!user || !(await user.isMatchPassword(password, user.password))) {
-				return res.status(401).json({
+			if(!user){
+				
+				return res.status(400).json({
+					status: 'Failed',
+					message: 'Invalid user credentials',
+				});
+			}
+
+			if (!(await user.isMatchPassword(password, user.password))) {
+				console.log("password mismatch")
+				return res.status(400).json({
 					status: 'Failed',
 					message: 'Invalid user credentials',
 				});
