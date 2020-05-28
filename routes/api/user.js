@@ -318,11 +318,11 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			const user = await User.findOne({ email }).select('+password');
+			console.log("req body",req.body)
+			const user = await User.findOne({email }).select('+password');
 			console.log("user",user)
 
 			if(!user){
-				
 				return res.status(400).json({
 					status: 'Failed',
 					message: 'Invalid user credentials',
