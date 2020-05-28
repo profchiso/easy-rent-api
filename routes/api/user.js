@@ -84,17 +84,18 @@ router.get(
 				if (skip >= numberOfDocument) {
 					apiError.errMessage="This page does not exits"
 					apiError.statusCode=404
-					return res.status(404).json(apiError);
+					return res.json(apiError);
 				}
 			}
 
 			//execute query
 			const users = await query; // query.sort().select().skip().limit()
 
-			return res.status(200).json({
+			return res.json({
 				status: 'success',
 				result: users.length,
 				users,
+				statusCode:200
 			});
 		} catch (error) {
 			console.log(error);
@@ -119,11 +120,12 @@ router.get(
 			if (!user) {
 					apiError.errMessage=`No user with the id ${req.params.id}`
 					apiError.statusCode=404
-					return res.status(404).json(apiError);
+					return res.json(apiError);
 			}
 			return res.status(200).json({
 				status: 'success',
 				user,
+				statusCode:404
 			});
 		} catch (error) {
 			console.log(error);
@@ -162,7 +164,7 @@ router.post(
 			if (user) {
 				apiError.errMessage="user already exist!"
 				apiError.statusCode=400
-				return res.status(400).json(apiError);
+				return res.json(apiError);
 			}
 			const avatar = gravatar.url(email, {
 				s: '200',
@@ -281,10 +283,11 @@ router.post(
 
 					await sendEmailWithNodeMailer(mailOptions);
 
-					return res.status(201).json({
+					return res.json({
 						status: 'success',
 						token,
 						user: createUser,
+						statusCode:201
 					});
 				}
 			);
@@ -327,13 +330,13 @@ router.post(
 			if(!user){
 				apiError.errMessage="Invalid user credentials"
 				apiError.statusCode=400
-				return res.status(400).json(apiError);
+				return res.json(apiError);
 			}
 
 			if (!(await user.isMatchPassword(password, user.password))) {
 				apiError.errMessage="Invalid user credentials"
 				apiError.statusCode=400
-				return res.status(400).json(apiError);
+				return res.json(apiError);
 			}
 
 			const payLoad = {
@@ -356,10 +359,11 @@ router.post(
 				});
 
 				//end of code to send token as cookie
-				return res.status(200).json({
+				return res.json({
 					status: 'success',
 					token,
 					user,
+					statusCode:200
 				});
 			});
 		} catch (error) {
@@ -479,9 +483,10 @@ router.post('/forgot-password', async (req, res) => {
 			await sendEmailWithNodeMailer(mailOptions);
 
 			//send route response
-			return res.status(200).json({
+			return res.json({
 				status: 'success',
 				message: `A password reset token has ben sent to your email address  ${user.email}, Login to you email to reset your password(token last for 10 minutes)`,
+				statusCode:200
 			});
 		} catch (error) {
 			//if the is an error while sending resettoken mail, set both passwordResetToken ,passwordResetTokenExpires to undefined and save
@@ -522,7 +527,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 		if (!user) {
 			apiError.errMessage=`Token invalid or has expires`
 			apiError.statusCode=400
-			return res.status(400).json(apiError);	
+			return res.json(apiError);	
 		}
 		//update user data and save
 		user.password = password;
@@ -539,9 +544,10 @@ router.patch('/reset-password/:token', async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
-			return res.status(200).json({
+			return res.json({
 				status: 'success',
 				token,
+				statusCode:200
 			});
 		});
 	} catch (error) {
@@ -567,7 +573,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!user) {
 			apiError.errMessage=`User not found`
 			apiError.statusCode=404
-			return res.status(404).json(apiError);	
+			return res.json(apiError);	
 			
 			
 		}
@@ -580,7 +586,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!passwordIsMatch) {
 			apiError.errMessage=`The password you entered is incorrect`
 			apiError.statusCode=401
-			return res.status(401).json(apiError);	
+			return res.json(apiError);	
 		}
 		user.password = newPassword;
 		user.confirmPassword = newConfirmPassword;
@@ -596,9 +602,10 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
-			return res.status(200).json({
+			return res.json({
 				status: 'success',
 				token,
+				statusCode:200
 			});
 		});
 	} catch (error) {
@@ -632,7 +639,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		if (password || confirmPassword || role) {
 			apiError.errMessage=`You cannot update password or role or confirm password from this route`
 			apiError.statusCode=400
-			return res.status(400).json(apiError);	
+			return res.json(apiError);	
 		}
 
 		let updatedata = { ...req.body };
@@ -652,9 +659,10 @@ router.patch('/update-me', authenticate, async (req, res) => {
 			new: true,
 			runValidators: true,
 		});
-		return res.status(200).json({
+		return res.json({
 			status: 'success',
 			user,
+			statusCode:200
 		});
 		//send the updated user data
 	} catch (error) {
@@ -674,9 +682,10 @@ router.patch('/:id', authenticate, async (req, res) => {
 			new: true,
 			runValidators: true,
 		}).select('-password');
-		return res.status(200).json({
+		return res.json({
 			status: 'success',
 			user: updatedUser,
+			statusCode:200
 		});
 	} catch (error) {
 		console.log(error);
@@ -718,9 +727,10 @@ router.delete('/delete-me', authenticate, async (req, res) => {
 				runValidators: true,
 			}
 		);
-		return res.status(204).json({
+		return res.json({
 			status: 'success',
 			message: 'Acount deactivated successfully',
+			statusCode:204
 		});
 	} catch (error) {
 		console.log(error);
