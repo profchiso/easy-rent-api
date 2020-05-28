@@ -318,7 +318,7 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			console.log("req body",req.body)
+			console.log(User.find({}))
 			const user = await User.find({email }).select('+password');
 			console.log("user",user)
 
