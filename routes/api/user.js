@@ -322,7 +322,7 @@ router.post(
 		try {
 			
 			const user = await User.findOne({email }).select('+password');
-			console.log("user",user)
+		
 
 			if(!user){
 				apiError.errMessage="Invalid user credentials"
@@ -364,7 +364,11 @@ router.post(
 			});
 		} catch (error) {
 			console.log(error);
-			return res.status(500).json({ status: 'Failed', error });
+			if(apiError.errMessage!==""){
+				return res.json(apiError)
+			}else{
+				return res.status(500).json({ status: 'Failed', error });
+			}	
 		}
 	}
 );
