@@ -386,13 +386,13 @@ router.post('/forgot-password', async (req, res) => {
 		if (!email) {
 			   apiError.errMessage="Invalid user credentials"
 				apiError.statusCode=400
-				return res.status(400).json(apiError);
+				return res.json(apiError);
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
 			apiError.errMessage=`No user with the provided email ${email}`
 			apiError.statusCode=400
-			return res.status(400).json(apiError);
+			return res.json(apiError);
 		
 		}
 		//get the reset token from the instance middleware in the User model
