@@ -159,7 +159,7 @@ router.post(
 			const { email } = req.body;
 			const user = await User.findOne({ email });
 			if (user) {
-				return res.status(400).json({
+				return res.status(400).send({
 					status: 'failed',
 					message: 'user already exist!',
 				});
@@ -323,7 +323,7 @@ router.post(
 			console.log("user",user)
 
 			if(!user){
-				return res.status(400).json({
+				return res.status(400).send({
 					status: 'Failed',
 					message: 'Invalid user credentials',
 				});
