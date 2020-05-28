@@ -319,7 +319,7 @@ router.post(
 		const { email, password } = req.body;
 		try {
 			console.log("req body",req.body)
-			const user = await User.findOne({email }).select('+password');
+			const user = await User.find({email }).select('+password');
 			console.log("user",user)
 
 			if(!user){
@@ -329,7 +329,7 @@ router.post(
 				});
 			}
 
-			if (!(await user.isMatchPassword(password, user.password))) {
+			if (!(await user.isMatchPassword(password, user[0].password))) {
 				console.log("password mismatch")
 				return res.status(400).json({
 					status: 'Failed',
