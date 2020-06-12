@@ -7,24 +7,24 @@ const userSchema = new mongoose.Schema({
 	name: {
 		type: String,
 		required: ['true', 'Please provide a name'],
-		trim: true
+		trim: true,
 	},
 	email: {
 		type: String,
 		unique: true,
 		required: ['true', 'Valid email address required'],
 		lowercase: true,
-		validate: [validator.isEmail, 'Invalid email']
+		validate: [validator.isEmail, 'Invalid email'],
 	},
 	phone: {
 		type: String,
 		required: ['true', 'Please provide a valid  mobile number'],
-		min: ['11', 'Mobile number must be 11 digit']
+		min: ['11', 'Mobile number must be 11 digit'],
 	},
 	password: {
 		type: String,
 		required: true,
-		select: false //excludes the password while returnin user data
+		select: false, //excludes the password while returnin user data
 	},
 	confirmPassword: {
 		type: String,
@@ -32,46 +32,62 @@ const userSchema = new mongoose.Schema({
 		select: false,
 		validate: {
 			//workes only for create and save and not update
-			validator: function(val) {
+			validator: function (val) {
 				return val === this.password;
 			},
-			message: 'Password and confirm password does not match'
-		}
+			message: 'Password and confirm password does not match',
+		},
 	},
 	passwordChangedAt: Date,
 	address: {
 		type: String,
 		// required: ['true', 'Please provide a valid address'],
-		trim: true
+		trim: true,
 	},
-	
+
 	avatar: String,
 	createdAt: {
 		type: Date,
-		default: Date.now()
+		default: Date.now(),
 	},
 	role: {
 		type: String,
 		enum: ['user', 'admin', 'developer'],
-		default: 'user'
+		default: 'user',
 	},
 	passwordResetToken: {
 		type: String,
-		select: false
+		select: false,
 	},
 	passwordResetTokenExpires: {
 		type: Date,
-		select: false
+		select: false,
 	},
 	isActiveUser: {
 		type: Boolean,
 		default: false,
-		
-	}
+	},
+	isSubscribed: {
+		type: Boolean,
+		default: false,
+	},
+	subscriptionType: String,
+	subscriptionHistory: [
+		{
+			month: String,
+			year: Number,
+			subscriptionType: String,
+			subscriptionAmount: Number,
+			subscriptionDate: {
+				type: Date,
+				default: Date.now(),
+			},
+		},
+	],
 });
 
 //mongoose pre middleware to t hash password before saving it to database
-userSchema.pre('save', async function(next) {
+userSchema.pre('save', async function (next) {
 	if (!this.isModified('password')) return next();
 	this.password = await bcrypt.hash(this.password, 10);
 	this.confirmPassword = undefined; //removes the confirmpassword field from the req.body before saving to database
@@ -79,7 +95,7 @@ userSchema.pre('save', async function(next) {
 });
 
 //mongoose pre middleware to run when there  is reset password action
-userSchema.pre('save', function(next) {
+userSchema.pre('save', function (next) {
 	if (!this.isModified('password') || this.isNew) {
 		return next();
 	}
@@ -88,16 +104,16 @@ userSchema.pre('save', function(next) {
 });
 
 //instant middleware function to validate password on login
-userSchema.methods.isMatchPassword = async function(
+userSchema.methods.isMatchPassword = async function (
 	enteredPassword,
 	userpassword
 ) {
-	console.log("password check",bcrypt.compare(enteredPassword, userpassword))
+	console.log('password check', bcrypt.compare(enteredPassword, userpassword));
 	return await bcrypt.compare(enteredPassword, userpassword);
 };
 
 //instance middleware function to check if user changed password after a jwt token was isssued
-userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function(
+userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function (
 	JWTTimeStamp
 ) {
 	//check if the user has changed password
@@ -115,7 +131,7 @@ userSchema.methods.checkIfUserChangedPasswordAfterJWTToken = async function(
 };
 
 //instance middleware function to generate password reset token
-userSchema.methods.generatePasswordResetToken = function() {
+userSchema.methods.generatePasswordResetToken = function () {
 	const resetPasswordToken = crypto.randomBytes(32).toString('hex');
 
 	this.passwordResetToken = crypto
@@ -128,9 +144,10 @@ userSchema.methods.generatePasswordResetToken = function() {
 };
 
 // query middleware to not return user with isActiveUser=== false
-userSchema.pre(/^find/, function(next) {
-	// this.find({ isActiveUser: { $ne: false } }); //return only active users
+userSchema.pre(/^find/, function (next) {
+	//  this.find({ isActiveUser: { $ne: false } }); //return only active users
 	next();
 });
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;

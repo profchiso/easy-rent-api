@@ -32,14 +32,11 @@ const appartmentSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false,
 	},
-	minPrice: {
+	price: {
 		type: Number,
 		required: true,
 	},
-	maxPrice: {
-		type: Number,
-		required: true,
-	},
+
 	userId: String,
 	user: {
 		type: mongoose.Schema.ObjectId,
@@ -47,6 +44,10 @@ const appartmentSchema = new mongoose.Schema({
 		required: true,
 	},
 	isDeleted: {
+		type: Boolean,
+		default: false,
+	},
+	isVerified: {
 		type: Boolean,
 		default: false,
 	},
