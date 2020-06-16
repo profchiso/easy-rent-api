@@ -31,7 +31,7 @@ router.get(
 		//this route can take parameters pass it by ?param=value
 
 		try {
-			const apiError={}
+			const apiError = {};
 			// console.log(req.query);
 			let requestQueryObject = { ...req.query }; //make a copy of the req.query object
 
@@ -82,8 +82,8 @@ router.get(
 			if (req.query.page) {
 				let numberOfDocument = await User.countDocuments();
 				if (skip >= numberOfDocument) {
-					apiError.errMessage="This page does not exits"
-					apiError.statusCode=404
+					apiError.errMessage = 'This page does not exits';
+					apiError.statusCode = 404;
 					return res.json(apiError);
 				}
 			}
@@ -95,7 +95,7 @@ router.get(
 				status: 'success',
 				result: users.length,
 				users,
-				statusCode:200
+				statusCode: 200,
 			});
 		} catch (error) {
 			console.log(error);
@@ -115,17 +115,17 @@ router.get(
 	authorize('admin', 'developer'),
 	async (req, res) => {
 		try {
-			const apiError={}
+			const apiError = {};
 			const user = await User.findById(req.params.id).select('-__v');
 			if (!user) {
-					apiError.errMessage=`No user with the id ${req.params.id}`
-					apiError.statusCode=404
-					return res.json(apiError);
+				apiError.errMessage = `No user with the id ${req.params.id}`;
+				apiError.statusCode = 404;
+				return res.json(apiError);
 			}
 			return res.status(200).json({
 				status: 'success',
 				user,
-				statusCode:404
+				statusCode: 404,
 			});
 		} catch (error) {
 			console.log(error);
@@ -148,22 +148,20 @@ router.post(
 		check('phone', 'Phone number required').not().notEmpty(),
 		check('password', 'Password required').notEmpty(),
 		check('confirmPassword', 'confirmPassword required').notEmpty(),
-
-		
 	],
 	async (req, res) => {
 		const errors = validationResult(req.body);
-		
+
 		if (!errors.isEmpty()) {
 			return res.status(400).json({ status: 'Failed', errors: errors.array() });
 		}
 		try {
 			const { email } = req.body;
-			const apiError={}
+			const apiError = {};
 			const user = await User.findOne({ email });
 			if (user) {
-				apiError.errMessage="user already exist!"
-				apiError.statusCode=400
+				apiError.errMessage = 'user already exist!';
+				apiError.statusCode = 400;
 				return res.json(apiError);
 			}
 			const avatar = gravatar.url(email, {
@@ -287,7 +285,7 @@ router.post(
 						status: 'success',
 						token,
 						user: createUser,
-						statusCode:201
+						statusCode: 201,
 					});
 				}
 			);
@@ -301,6 +299,17 @@ router.post(
 	}
 );
 
+router.post('/oauth/authorize', async (req, res) => {
+	console.log('req.query', req.query);
+	console.log('req.body', req.body);
+	try {
+		//const user = await User.findOne({ email });
+	} catch (err) {
+		console.log(err);
+		res.json({ statusCode: 500, message: 'Internal server error' });
+	}
+});
+
 // user login route
 //working fine
 router.post(
@@ -313,9 +322,8 @@ router.post(
 
 	async (req, res) => {
 		const errors = validationResult(req.body); // pass req.body for form data validation but for json, just pass req;
-		const apiError={}
+		const apiError = {};
 		if (!errors.isEmpty()) {
-				
 			return res.status(400).json({
 				status: 'Failed',
 				error: errors.array(),
@@ -323,19 +331,17 @@ router.post(
 		}
 		const { email, password } = req.body;
 		try {
-			
-			const user = await User.findOne({email }).select('+password');
-		
+			const user = await User.findOne({ email }).select('+password');
 
-			if(!user){
-				apiError.errMessage="Invalid user credentials"
-				apiError.statusCode=400
+			if (!user) {
+				apiError.errMessage = 'Invalid user credentials';
+				apiError.statusCode = 400;
 				return res.json(apiError);
 			}
 
 			if (!(await user.isMatchPassword(password, user.password))) {
-				apiError.errMessage="Invalid user credentials"
-				apiError.statusCode=400
+				apiError.errMessage = 'Invalid user credentials';
+				apiError.statusCode = 400;
 				return res.json(apiError);
 			}
 
@@ -363,16 +369,16 @@ router.post(
 					status: 'success',
 					token,
 					user,
-					statusCode:200
+					statusCode: 200,
 				});
 			});
 		} catch (error) {
 			console.log(error);
-			if(apiError.errMessage!==""){
-				return res.json(apiError)
-			}else{
+			if (apiError.errMessage !== '') {
+				return res.json(apiError);
+			} else {
 				return res.status(500).json({ status: 'Failed', error });
-			}	
+			}
 		}
 	}
 );
@@ -382,18 +388,17 @@ router.post(
 router.post('/forgot-password', async (req, res) => {
 	try {
 		const { email } = req.body;
-		const apiError={}
+		const apiError = {};
 		if (!email) {
-			   apiError.errMessage="Invalid user credentials"
-				apiError.statusCode=400
-				return res.json(apiError);
+			apiError.errMessage = 'Invalid user credentials';
+			apiError.statusCode = 400;
+			return res.json(apiError);
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
-			apiError.errMessage=`No user with the provided email ${email}`
-			apiError.statusCode=400
+			apiError.errMessage = `No user with the provided email ${email}`;
+			apiError.statusCode = 400;
 			return res.json(apiError);
-		
 		}
 		//get the reset token from the instance middleware in the User model
 		const resetPasswordToken = user.generatePasswordResetToken();
@@ -414,9 +419,7 @@ router.post('/forgot-password', async (req, res) => {
 				from: 'giftedbraintech@gmail.com',
 				to: user.email,
 				subject: 'Password reset token (last for 5 minutes)',
-				text: `Dear ${
-					user.name.split(' ')[0]
-				}, ${message}`,
+				text: `Dear ${user.name.split(' ')[0]}, ${message}`,
 				html: `<div>
 				<div  style="background-color:#f3f3f3; text-align:center">
 									<div>
@@ -486,7 +489,7 @@ router.post('/forgot-password', async (req, res) => {
 			return res.json({
 				status: 'success',
 				errMessage: `A password reset token has ben sent to your email address  ${user.email}`,
-				statusCode:200
+				statusCode: 200,
 			});
 		} catch (error) {
 			//if the is an error while sending resettoken mail, set both passwordResetToken ,passwordResetTokenExpires to undefined and save
@@ -513,7 +516,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 	try {
 		//get user base on the reset password token sent to their mail
 		const { token } = req.params;
-		const apiError={}
+		const apiError = {};
 		const { password, confirmPassword } = req.body;
 		const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 		//check if there is user with the hashedtoken and also if the token has not expired
@@ -525,9 +528,9 @@ router.patch('/reset-password/:token', async (req, res) => {
 		);
 		//if no user is found
 		if (!user) {
-			apiError.errMessage=`Token invalid or has expires`
-			apiError.statusCode=400
-			return res.json(apiError);	
+			apiError.errMessage = `Token invalid or has expires`;
+			apiError.statusCode = 400;
+			return res.json(apiError);
 		}
 		//update user data and save
 		user.password = password;
@@ -547,8 +550,8 @@ router.patch('/reset-password/:token', async (req, res) => {
 			return res.json({
 				status: 'success',
 				token,
-				errMessage:"Check email for reset token",
-				statusCode:200
+				errMessage: 'Check email for reset token',
+				statusCode: 200,
 			});
 		});
 	} catch (error) {
@@ -565,18 +568,16 @@ router.patch('/reset-password/:token', async (req, res) => {
 router.patch('/update-password', authenticate, async (req, res) => {
 	//get the submitted password
 	const { oldPassword, newPassword, newConfirmPassword } = req.body;
-	const apiError={}
+	const apiError = {};
 	try {
 		//get the user from the user collection
 		let user = await User.findById(req.user.id).select(
 			'+password +confirmPassword'
 		);
 		if (!user) {
-			apiError.errMessage=`User not found`
-			apiError.statusCode=404
-			return res.json(apiError);	
-			
-			
+			apiError.errMessage = `User not found`;
+			apiError.statusCode = 404;
+			return res.json(apiError);
 		}
 
 		// check if passwaord matches the one in the database
@@ -585,9 +586,9 @@ router.patch('/update-password', authenticate, async (req, res) => {
 			user.password
 		);
 		if (!passwordIsMatch) {
-			apiError.errMessage=`The password you entered is incorrect`
-			apiError.statusCode=401
-			return res.json(apiError);	
+			apiError.errMessage = `The password you entered is incorrect`;
+			apiError.statusCode = 401;
+			return res.json(apiError);
 		}
 		user.password = newPassword;
 		user.confirmPassword = newConfirmPassword;
@@ -606,7 +607,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 			return res.json({
 				status: 'success',
 				token,
-				statusCode:200
+				statusCode: 200,
 			});
 		});
 	} catch (error) {
@@ -635,12 +636,12 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		//update user data
 
 		//more robust implementation
-		const { password, confirmPassword ,role} = req.body;
-		const apiError={}
+		const { password, confirmPassword, role } = req.body;
+		const apiError = {};
 		if (password || confirmPassword || role) {
-			apiError.errMessage=`You cannot update password or role or confirm password from this route`
-			apiError.statusCode=400
-			return res.json(apiError);	
+			apiError.errMessage = `You cannot update password or role or confirm password from this route`;
+			apiError.statusCode = 400;
+			return res.json(apiError);
 		}
 
 		let updatedata = { ...req.body };
@@ -655,7 +656,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		];
 
 		excludedFields.forEach((field) => delete updatedata[field]); //exclude the password,confirmpassword,role field  etc from update data
-		updatedata.isActiveUser=true
+		updatedata.isActiveUser = true;
 		const user = await User.findByIdAndUpdate(req.user.id, updatedata, {
 			new: true,
 			runValidators: true,
@@ -663,7 +664,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		return res.json({
 			status: 'success',
 			user,
-			statusCode:200
+			statusCode: 200,
 		});
 		//send the updated user data
 	} catch (error) {
@@ -686,7 +687,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 		return res.json({
 			status: 'success',
 			user: updatedUser,
-			statusCode:200
+			statusCode: 200,
 		});
 	} catch (error) {
 		console.log(error);
@@ -731,7 +732,7 @@ router.delete('/delete-me', authenticate, async (req, res) => {
 		return res.json({
 			status: 'success',
 			message: 'Acount deactivated successfully',
-			statusCode:204
+			statusCode: 204,
 		});
 	} catch (error) {
 		console.log(error);

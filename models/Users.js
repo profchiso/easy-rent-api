@@ -26,6 +26,10 @@ const userSchema = new mongoose.Schema({
 		required: true,
 		select: false, //excludes the password while returnin user data
 	},
+	googleId: String,
+	facebookId: String,
+	twitterId: String,
+	oauthEmail: String,
 	confirmPassword: {
 		type: String,
 		required: true,
