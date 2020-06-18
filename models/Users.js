@@ -19,12 +19,11 @@ const userSchema = new mongoose.Schema({
 	phone: {
 		type: String,
 		required: ['true', 'Please provide a valid  mobile number'],
-		min: ['11', 'Mobile number must be 11 digit'],
 	},
 	password: {
 		type: String,
-		required: true,
 		select: false, //excludes the password while returnin user data
+		//required: true,
 	},
 	googleId: String,
 	facebookId: String,
@@ -32,15 +31,16 @@ const userSchema = new mongoose.Schema({
 	oauthEmail: String,
 	confirmPassword: {
 		type: String,
-		required: true,
 		select: false,
-		validate: {
-			//workes only for create and save and not update
-			validator: function (val) {
-				return val === this.password;
-			},
-			message: 'Password and confirm password does not match',
-		},
+		//required: true,
+
+		//validate: {
+		//workes only for create and save and not update
+		//validator: function (val) {
+		//return val === this.password;
+		//},
+		//message: 'Password and confirm password does not match',
+		//},
 	},
 	passwordChangedAt: Date,
 	address: {

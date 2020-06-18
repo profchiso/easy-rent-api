@@ -303,7 +303,54 @@ router.post('/oauth/authorize', async (req, res) => {
 	console.log('req.query', req.query);
 	console.log('req.body', req.body);
 	try {
-		//const user = await User.findOne({ email });
+		if (req.body.hasOwnProperty('facebookId')) {
+			const isExist = await User.findOne({ facebookId });
+			if (isExist) {
+				const payLoad = {
+					user: {
+						id: isExist.id,
+					},
+				};
+				isExist.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: isExist,
+							statusCode: 200,
+						});
+					}
+				);
+			} else {
+				const createOauthUser = User.create(req.body);
+				//register
+				//send token
+			}
+		}
+
+		if (req.body.hasOwnProperty('twitterId')) {
+			const isExist = await User.findOne({ twitterId });
+			if (isExist) {
+				//sent token
+			} else {
+				//register
+			}
+		}
+		if (req.body.hasOwnProperty('googleId')) {
+			const isExist = await User.findOne({ googleId });
+			if (isExist) {
+				//sent token
+			} else {
+				//register
+			}
+		}
 	} catch (err) {
 		console.log(err);
 		res.json({ statusCode: 500, message: 'Internal server error' });
