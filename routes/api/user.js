@@ -330,25 +330,131 @@ router.post('/oauth/authorize', async (req, res) => {
 				);
 			} else {
 				const createOauthUser = User.create(req.body);
-				//register
-				//send token
+				const payLoad = {
+					user: {
+						id: createOauthUser.id,
+					},
+				};
+				createOauthUser.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: createOauthUser,
+							statusCode: 200,
+						});
+					}
+				);
 			}
 		}
 
 		if (req.body.hasOwnProperty('twitterId')) {
 			const isExist = await User.findOne({ twitterId });
 			if (isExist) {
-				//sent token
+				const payLoad = {
+					user: {
+						id: isExist.id,
+					},
+				};
+				isExist.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: isExist,
+							statusCode: 200,
+						});
+					}
+				);
 			} else {
-				//register
+				const createOauthUser = User.create(req.body);
+				const payLoad = {
+					user: {
+						id: createOauthUser.id,
+					},
+				};
+				createOauthUser.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: createOauthUser,
+							statusCode: 200,
+						});
+					}
+				);
 			}
 		}
 		if (req.body.hasOwnProperty('googleId')) {
 			const isExist = await User.findOne({ googleId });
 			if (isExist) {
-				//sent token
+				const payLoad = {
+					user: {
+						id: isExist.id,
+					},
+				};
+				isExist.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: isExist,
+							statusCode: 200,
+						});
+					}
+				);
 			} else {
-				//register
+				const createOauthUser = User.create(req.body);
+				const payLoad = {
+					user: {
+						id: createOauthUser.id,
+					},
+				};
+				createOauthUser.__v = undefined;
+
+				jwt.sign(
+					payLoad,
+					JWT_SECRET,
+					{ expiresIn: 3600 },
+					async (error, token) => {
+						if (error) throw error;
+
+						return res.json({
+							status: 'success',
+							token,
+							user: createOauthUser,
+							statusCode: 200,
+						});
+					}
+				);
 			}
 		}
 	} catch (err) {
