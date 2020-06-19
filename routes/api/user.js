@@ -406,6 +406,7 @@ router.post('/oauth/authorize', async (req, res) => {
 				);
 			}
 		}
+
 		if (req.body.hasOwnProperty('googleId')) {
 			const isExist = await User.findOne({ googleId });
 			if (isExist) {
@@ -457,9 +458,14 @@ router.post('/oauth/authorize', async (req, res) => {
 				);
 			}
 		}
+		return res.json({
+			status: 'failed',
+			statusCode: 400,
+			message: 'oauth provider not specified',
+		});
 	} catch (err) {
 		console.log(err);
-		res.json({ statusCode: 500, message: 'Internal server error' });
+		return res.json({ statusCode: 500, message: 'Internal server error' });
 	}
 });
 
