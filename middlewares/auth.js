@@ -3,6 +3,7 @@ const User = require('../models/Users');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.authenticate = async (req, res, next) => {
+	const apiError = {};
 	try {
 		//more robust implementation
 		let token;
@@ -17,10 +18,10 @@ exports.authenticate = async (req, res, next) => {
 
 		//check if the access token actually exist
 		if (!token) {
-			return res.status(401).json({
-				status: 'Failed',
-				message: 'Acesss denied, No authorization token',
-			});
+			apiError.errMessage = `Acesss denied, No authorization token`;
+			apiError.statusCode = 401;
+			apiError.status = 'Failed';
+			return res.json(apiError);
 		}
 		//decode the acesss token
 		const decodedToken = await jwt.verify(token, JWT_SECRET);
@@ -28,20 +29,18 @@ exports.authenticate = async (req, res, next) => {
 		//check if user exist   just to be sure the user had not bern deleted
 		const user = await User.findById(decodedToken.user.id);
 		if (!user) {
-			return res.status(401).json({
-				status: 'Failed',
-				message:
-					'Acesss denied, User with the token might have been deleted or deactivated',
-			});
+			apiError.errMessage = `Acesss denied, User with the token might have been deleted or deactivated`;
+			apiError.statusCode = 401;
+			apiError.status = 'Failed';
+			return res.json(apiError);
 		}
 
 		//check if user changed password after the token was issued
 		if (!user.checkIfUserChangedPasswordAfterJWTToken(decodedToken.iat)) {
-			return res.status(401).json({
-				status: 'Failed',
-				message:
-					'You recently changed you password,Please re-login and  try again',
-			});
+			apiError.errMessage = `You recently changed you password,Please re-login and  try again`;
+			apiError.statusCode = 401;
+			apiError.status = 'Failed';
+			return res.json(apiError);
 		}
 
 		//Allow access to protected route
@@ -50,21 +49,22 @@ exports.authenticate = async (req, res, next) => {
 		next();
 	} catch (error) {
 		console.log(error);
-		res.status(401).json({
-			status: 'Failed',
-			error,
-			message: 'Invalid token',
-		});
+
+		apiError.errMessage = `Invalid token`;
+		apiError.statusCode = 401;
+		apiError.status = 'Failed';
+		return res.json(apiError);
 	}
 };
 
 exports.authorize = (...roles) => {
+	const apiError = {};
 	return (req, res, next) => {
 		if (!roles.includes(req.user.role)) {
-			return res.status(403).json({
-				status: 'Failed',
-				message: 'Sorry you are not allowed to carry out this operation',
-			});
+			apiError.errMessage = `Sorry you are not allowed to carry out this operation`;
+			apiError.statusCode = 403;
+			apiError.status = 'Failed';
+			return res.json(apiError);
 		}
 		//user is authorized
 		next();
