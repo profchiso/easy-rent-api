@@ -3,6 +3,7 @@ const User = require('../models/Users');
 const JWT_SECRET = process.env.JWT_SECRET;
 
 exports.authenticate = async (req, res, next) => {
+	console.log(req);
 	const apiError = {};
 	try {
 		//more robust implementation
