@@ -73,9 +73,13 @@ const userSchema = new mongoose.Schema({
 	},
 	isSubscribed: {
 		type: Boolean,
-		default: false,
+		default: true,
 	},
-	subscriptionType: String,
+	subscriptionType: {
+		type: String,
+		enum: ['basic', 'silver', 'gold', 'diamond'],
+		default: 'basic',
+	},
 	subscriptionHistory: [
 		{
 			month: String,
