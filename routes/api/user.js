@@ -751,10 +751,11 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		}
 		user.password = newPassword;
 		user.confirmPassword = newConfirmPassword;
-		const updatedPasswordUser = await user.save();
-		updatedPasswordUser.password = undefined;
-		updatedPasswordUser.passwordChangedAt = undefined;
-		updatedPasswordUser.createdAt = undefined;
+		await user.save();
+		//const updatedPasswordUser = await user.save();
+		// updatedPasswordUser.password = undefined;
+		// updatedPasswordUser.passwordChangedAt = undefined;
+		// updatedPasswordUser.createdAt = undefined;
 
 		// always use the save for password update and not findbyidandupdate in order to run the User model pre middlewares
 
@@ -770,7 +771,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 				status: 'success',
 				token,
 				statusCode: 200,
-				user: updatedPasswordUser,
+				user,
 			});
 		});
 	} catch (error) {
