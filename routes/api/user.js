@@ -771,7 +771,6 @@ router.patch('/update-password', authenticate, async (req, res) => {
 				status: 'success',
 				token,
 				statusCode: 200,
-				user,
 			});
 		});
 	} catch (error) {
