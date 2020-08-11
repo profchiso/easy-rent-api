@@ -84,14 +84,14 @@ router.get(
 				if (skip >= numberOfDocument) {
 					apiError.errMessage = 'This page does not exits';
 					apiError.statusCode = 404;
-					return res.json(apiError);
+					return res.status(404).json(apiError);
 				}
 			}
 
 			//execute query
 			const users = await query; // query.sort().select().skip().limit()
 
-			return res.json({
+			return res.status(200).json({
 				status: 'success',
 				result: users.length,
 				users,
@@ -120,18 +120,19 @@ router.get(
 			if (!user) {
 				apiError.errMessage = `No user with the id ${req.params.id}`;
 				apiError.statusCode = 404;
-				return res.json(apiError);
+				return res.status(404).json(apiError);
 			}
 			return res.status(200).json({
 				status: 'success',
 				user,
-				statusCode: 404,
+				statusCode: 200,
 			});
 		} catch (error) {
 			console.log(error);
 			return res.status(400).json({
-				ststus: 'failed',
+				status: 'failed',
 				error,
+				statusCode: 400,
 			});
 		}
 	}
@@ -153,7 +154,7 @@ router.post(
 		const errors = validationResult(req.body);
 
 		if (!errors.isEmpty()) {
-			return res.status(400).json({ status: 'Failed', errors: errors.array() });
+			return res.status(400).json({ status: 'Failed', errors: errors.array(),statusCode: 400 });
 		}
 		try {
 			const { email } = req.body;
@@ -162,7 +163,7 @@ router.post(
 			if (user) {
 				apiError.errMessage = 'user already exist!';
 				apiError.statusCode = 400;
-				return res.json(apiError);
+				return res.status(400).json(apiError);
 			}
 			const avatar = gravatar.url(email, {
 				s: '200',
@@ -281,7 +282,7 @@ router.post(
 
 					await sendEmailWithNodeMailer(mailOptions);
 
-					return res.json({
+					return res.status(201).json({
 						status: 'success',
 						token,
 						user: createUser,
@@ -294,6 +295,7 @@ router.post(
 			return res.status(400).json({
 				status: 'failed',
 				error,
+				statusCode: 400,
 			});
 		}
 	}
@@ -320,7 +322,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: isExist,
@@ -344,7 +346,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: createOauthUser,
@@ -372,7 +374,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: isExist,
@@ -396,7 +398,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: createOauthUser,
@@ -424,7 +426,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: isExist,
@@ -448,7 +450,7 @@ router.post('/oauth/authorize', async (req, res) => {
 					async (error, token) => {
 						if (error) throw error;
 
-						return res.json({
+						return res.status(200).json({
 							status: 'success',
 							token,
 							user: createOauthUser,
@@ -458,14 +460,14 @@ router.post('/oauth/authorize', async (req, res) => {
 				);
 			}
 		}
-		return res.json({
+		return res.status(400).json({
 			status: 'failed',
 			statusCode: 400,
 			message: 'oauth provider not specified',
 		});
 	} catch (err) {
 		console.log(err);
-		return res.json({ statusCode: 500, message: 'Internal server error' });
+		return res.status(500).json({ statusCode: 500, message: 'Internal server error' });
 	}
 });
 
@@ -486,6 +488,7 @@ router.post(
 			return res.status(400).json({
 				status: 'Failed',
 				error: errors.array(),
+				statusCode: 400,
 			});
 		}
 		const { email, password } = req.body;
@@ -495,13 +498,13 @@ router.post(
 			if (!user) {
 				apiError.errMessage = 'Invalid user credentials';
 				apiError.statusCode = 400;
-				return res.json(apiError);
+				return res.status(400).json(apiError);
 			}
 
 			if (!(await user.isMatchPassword(password, user.password))) {
 				apiError.errMessage = 'Invalid user credentials';
 				apiError.statusCode = 400;
-				return res.json(apiError);
+				return res.status(400).json(apiError);
 			}
 
 			const payLoad = {
@@ -524,7 +527,7 @@ router.post(
 				});
 
 				//end of code to send token as cookie
-				return res.json({
+				return res.status(200).json({
 					status: 'success',
 					token,
 					user,
@@ -551,13 +554,13 @@ router.post('/forgot-password', async (req, res) => {
 		if (!email) {
 			apiError.errMessage = 'Invalid user credentials';
 			apiError.statusCode = 400;
-			return res.json(apiError);
+			return res.status(400).json(apiError);
 		}
 		const user = await User.findOne({ email });
 		if (!user) {
 			apiError.errMessage = `No user with the provided email ${email}`;
 			apiError.statusCode = 400;
-			return res.json(apiError);
+			return res.status(400).json(apiError);
 		}
 		//get the reset token from the instance middleware in the User model
 		const resetPasswordToken = user.generatePasswordResetToken();
@@ -645,7 +648,7 @@ router.post('/forgot-password', async (req, res) => {
 			await sendEmailWithNodeMailer(mailOptions);
 
 			//send route response
-			return res.json({
+			return res.status(200).json({
 				status: 'success',
 				errMessage: `A password reset token has ben sent to your email address  ${user.email}`,
 				statusCode: 200,
@@ -658,6 +661,7 @@ router.post('/forgot-password', async (req, res) => {
 			return res.status(500).json({
 				status: 'Failed',
 				message: 'There was an error sending the email please try again later',
+				statusCode: 500,
 			});
 		}
 	} catch (error) {
@@ -665,6 +669,7 @@ router.post('/forgot-password', async (req, res) => {
 		return res.status(400).json({
 			status: 'Failed',
 			message: error,
+			statusCode: 400,
 		});
 	}
 });
@@ -689,7 +694,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 		if (!user) {
 			apiError.errMessage = `Token invalid or has expires`;
 			apiError.statusCode = 400;
-			return res.json(apiError);
+			return res.status(400).json(apiError);
 		}
 		//update user data and save
 		user.password = password;
@@ -706,7 +711,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
-			return res.json({
+			return res.status(200).json({
 				status: 'success',
 				token,
 				errMessage: 'Check email for reset token',
@@ -718,6 +723,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 		return res.status(400).json({
 			status: 'Failed',
 			message: error,
+			statusCode: 400,
 		});
 	}
 });
@@ -736,7 +742,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!user) {
 			apiError.errMessage = `User not found`;
 			apiError.statusCode = 404;
-			return res.json(apiError);
+			return res.status(404).json(apiError);
 		}
 
 		// check if passwaord matches the one in the database
@@ -747,7 +753,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		if (!passwordIsMatch) {
 			apiError.errMessage = `The password you entered is incorrect`;
 			apiError.statusCode = 401;
-			return res.json(apiError);
+			return res.status(401).json(apiError);
 		}
 		user.password = newPassword;
 		user.confirmPassword = newConfirmPassword;
@@ -767,7 +773,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
-			return res.json({
+			return res.status(200).json({
 				status: 'success',
 				token,
 				statusCode: 200,
@@ -778,6 +784,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode: 400,
 		});
 	}
 });
@@ -804,7 +811,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		if (password || confirmPassword || role) {
 			apiError.errMessage = `You cannot update password or role or confirm password from this route`;
 			apiError.statusCode = 400;
-			return res.json(apiError);
+			return res.status(400).json(apiError);
 		}
 
 		let updatedata = { ...req.body };
@@ -824,7 +831,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 			new: true,
 			runValidators: true,
 		});
-		return res.json({
+		return res.status(200).json({
 			status: 'success',
 			user,
 			statusCode: 200,
@@ -835,6 +842,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode: 400,
 		});
 	}
 });
@@ -847,7 +855,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 			new: true,
 			runValidators: true,
 		}).select('-password');
-		return res.json({
+		return res.status(200).json({
 			status: 'success',
 			user: updatedUser,
 			statusCode: 200,
@@ -857,6 +865,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 		return res.status(400).json({
 			status: 'failed',
 			error,
+			statusCode: 400,
 		});
 	}
 });
@@ -892,7 +901,7 @@ router.delete('/delete-me', authenticate, async (req, res) => {
 				runValidators: true,
 			}
 		);
-		return res.json({
+		return res.status(204).json({
 			status: 'success',
 			message: 'Acount deactivated successfully',
 			statusCode: 204,
@@ -902,7 +911,9 @@ router.delete('/delete-me', authenticate, async (req, res) => {
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode: 400,
 		});
+
 	}
 });
 
