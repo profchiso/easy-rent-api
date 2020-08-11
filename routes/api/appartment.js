@@ -100,6 +100,7 @@ router.get('/', async (req, res) => {
 					status: 'failed',
 					result: 0,
 					message: 'This page does not exits',
+					statusCode: 404
 				});
 			}
 		}
@@ -111,12 +112,14 @@ router.get('/', async (req, res) => {
 			status: 'success',
 			result: appartments.length,
 			appartments,
+			statusCode:200
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(500).json({
 			status: 'Failed',
 			error,
+			statusCode:500
 		});
 	}
 });
@@ -135,6 +138,7 @@ router.get('/:id', async (req, res) => {
 				status: 'Failed',
 				result: 0,
 				message: `No result for the id ${req.params.id}`,
+				statusCode:404
 			});
 		}
 
@@ -142,12 +146,14 @@ router.get('/:id', async (req, res) => {
 			status: 'success',
 			result: appartment.length,
 			data: appartment,
+			statusCode:200
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode:400
 		});
 	}
 });
@@ -218,6 +224,7 @@ router.get(
 						status: 'failed',
 						result: 0,
 						message: 'This page does not exits',
+						statusCode:404
 					});
 				}
 			}
@@ -229,12 +236,14 @@ router.get(
 				status: 'success',
 				result: appartments.length,
 				appartments,
+				statusCode:200
 			});
 		} catch (error) {
 			console.log(error);
 			return res.status(400).json({
 				status: 'Failed',
 				error,
+				statusCode:400
 			});
 		}
 	}
@@ -308,6 +317,7 @@ router.post(
 				status: 'success',
 				result: newAppartment.length,
 				appartment: newAppartment,
+				statusCode:200
 			});
 		} catch (error) {
 			console.log(error);
@@ -334,12 +344,14 @@ router.patch('/:id', authenticate, async (req, res) => {
 			status: 'success',
 			result: updatedAppartment.length,
 			data: updatedAppartment,
+			statusCode:200
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode:400
 		});
 	}
 });
@@ -353,12 +365,14 @@ router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
 		return res.status(204).json({
 			status: 'success',
 			message: 'Appartment deleted !',
+			statusCode:204
 		});
 	} catch (error) {
 		console.log(error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,
+			statusCode:400
 		});
 	}
 });

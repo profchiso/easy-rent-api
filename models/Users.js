@@ -80,6 +80,15 @@ const userSchema = new mongoose.Schema({
 		enum: ['basic', 'silver', 'gold', 'diamond'],
 		default: 'basic',
 	},
+	subscriptionDate:{
+		type: Date,
+		default: Date.now(),
+	},
+	subscriptionExpiration:{
+		type: Date,
+		default: Date.now() + 30,
+	},
+
 	subscriptionHistory: [
 		{
 			month: String,

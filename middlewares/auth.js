@@ -22,7 +22,7 @@ exports.authenticate = async (req, res, next) => {
 			apiError.errMessage = `Acesss denied, No authorization token`;
 			apiError.statusCode = 401;
 			apiError.status = 'Failed';
-			return res.json(apiError);
+			return res.status(401).json(apiError);
 		}
 		//decode the acesss token
 		const decodedToken = await jwt.verify(token, JWT_SECRET);
@@ -33,7 +33,7 @@ exports.authenticate = async (req, res, next) => {
 			apiError.errMessage = `Acesss denied, User with the token might have been deleted or deactivated`;
 			apiError.statusCode = 401;
 			apiError.status = 'Failed';
-			return res.json(apiError);
+			return res.status(401).json(apiError);
 		}
 
 		//check if user changed password after the token was issued
@@ -41,7 +41,7 @@ exports.authenticate = async (req, res, next) => {
 			apiError.errMessage = `You recently changed you password,Please re-login and  try again`;
 			apiError.statusCode = 401;
 			apiError.status = 'Failed';
-			return res.json(apiError);
+			return res.status(401).json(apiError);
 		}
 
 		//Allow access to protected route
@@ -54,7 +54,7 @@ exports.authenticate = async (req, res, next) => {
 		apiError.errMessage = `Invalid token`;
 		apiError.statusCode = 401;
 		apiError.status = 'Failed';
-		return res.json(apiError);
+		return res.status(401).json(apiError);
 	}
 };
 
@@ -65,7 +65,7 @@ exports.authorize = (...roles) => {
 			apiError.errMessage = `Sorry you are not allowed to carry out this operation`;
 			apiError.statusCode = 403;
 			apiError.status = 'Failed';
-			return res.json(apiError);
+			return res.status(403).json(apiError);
 		}
 		//user is authorized
 		next();
