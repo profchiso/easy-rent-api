@@ -1,61 +1,60 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const appartmentSchema = new mongoose.Schema({
-	houseName: {
-		type: String,
-		required: true,
-	},
-	houseAddress: {
-		type: String,
-	},
-	houseType: {
-		type: String,
-	},
-	state: {
-		type: String,
-		required: true,
-	},
-	LGA: {
-		type: String,
-		required: true,
-	},
-	houseImage: String,
+  houseName: {
+    type: String,
+    required: true,
+  },
+  houseAddress: {
+    type: String,
+  },
+  houseType: {
+    type: String,
+  },
+  state: {
+    type: String,
+    required: true,
+  },
+  LGA: {
+    type: String,
+    required: true,
+  },
+  houseImage: String,
 
-	images: [String],
-	latitude: Number,
-	longitude: Number,
-	dateUploaded: {
-		type: Date,
-		default: Date.now(),
-	},
-	isRented: {
-		type: Boolean,
-		default: false,
-	},
-	price: {
-		type: Number,
-		required: true,
-	},
+  images: [String],
+  latitude: Number,
+  longitude: Number,
+  dateUploaded: {
+    type: Date,
+    default: Date.now(),
+  },
+  isRented: {
+    type: Boolean,
+    default: false,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
 
-	userId: String,
-	user: {
-		type: mongoose.Schema.ObjectId,
-		ref: 'user',
-		required: true,
-	},
-	isDeleted: {
-		type: Boolean,
-		default: false,
-	},
-	isVerified: {
-		type: Boolean,
-		default: false,
-	},
-	subscriptionType:{
-		type: String,
-		default: "basic",
-		
-	}
+  userId: String,
+  user: {
+    type: mongoose.Schema.ObjectId,
+    ref: "user",
+    required: true,
+  },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  subscriptionType: {
+    type: String,
+    default: "basic",
+  },
 });
 
 //pre middleware to populate the user field from the user collection
@@ -65,11 +64,11 @@ const appartmentSchema = new mongoose.Schema({
 // 	);
 // 	next();
 // });
-appartmentSchema.pre('/^find/', function (next) {
-	this.populate({
-		path: 'user',
-		select: '-__v -role -createdAt',
-	});
+appartmentSchema.pre("/^find/", function (next) {
+  this.populate({
+    path: "user",
+    select: "-__v -role -createdAt",
+  });
 });
-const Appartment = mongoose.model('Appartment', appartmentSchema);
+const Appartment = mongoose.model("Appartment", appartmentSchema);
 module.exports = Appartment;

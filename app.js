@@ -1,26 +1,26 @@
 //NPM modules
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const rateLimit = require('express-rate-limit');
-const helmet = require('helmet');
-const mongoSanitizer = require('express-mongo-sanitize');
-const xss = require('xss-clean');
-const hpp = require('hpp');
-const bodyParser = require('body-parser');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+const rateLimit = require("express-rate-limit");
+const helmet = require("helmet");
+const mongoSanitizer = require("express-mongo-sanitize");
+const xss = require("xss-clean");
+const hpp = require("hpp");
+const bodyParser = require("body-parser");
 
 //user defined modules
-const connectToDB = require('./controllers/dbController');
-const userRoute = require('./routes/api/user');
-const appartmentRoute = require('./routes/api/appartment');
-const undefinedRoutes = require('./routes/api/404-routes');
+const connectToDB = require("./controllers/dbController");
+const userRoute = require("./routes/api/user");
+const appartmentRoute = require("./routes/api/appartment");
+const undefinedRoutes = require("./routes/api/404-routes");
 
 connectToDB(); //function to connect to database
 
 const PORT = process.env.PORT || 5000;
 
 const app = express();
-app.enable('trust proxy');
+app.enable("trust proxy");
 //middlewares
 
 //middleware to set security HTTP headers
@@ -31,9 +31,9 @@ const limiter = rateLimit({
 	max: 300, //max no of request per IP in the specified time
 	windowMs: 60 * 60 * 1000, //time allowed for the num of request
 	message:
-		'Maximum allowed request  for an IP in an hour exceeded, please try again later', //
+		"Maximum allowed request  for an IP in an hour exceeded, please try again later", //
 });
-app.use('/easy-rent/api/', limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
+app.use("/easy-rent/api/", limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
 app.use(express.json({ extended: false })); //middleware for body-paser
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -52,11 +52,11 @@ app.use(xss());
 app.use(hpp({ whitelist: [] })); // use the whitelist option to specify some parameter that you want to allow duplicate in the array
 
 //routes
-app.get("/",(req,res)=>{
-	res.status(200).send("welcome to easy rent api")
-})
-app.use('/easy-rent/api/v1/users', userRoute); //users route
-app.use('/easy-rent/api/v1/appartment', appartmentRoute); //appartment route
+app.get("/", (req, res) => {
+	res.status(200).send("welcome to easy rent api");
+});
+app.use("/easy-rent/api/v1/users", userRoute); //users route
+app.use("/easy-rent/api/v1/appartment", appartmentRoute); //appartment route
 // app.use('/easy-rent/api/v1/auth', authRoute);
 
 //catch undefined endpoints

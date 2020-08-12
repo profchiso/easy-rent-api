@@ -1,11 +1,11 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const sharp = require('sharp');
-const { check, validationResult } = require('express-validator');
-const Appartment = require('../../models/Appartment');
+const multer = require("multer");
+const sharp = require("sharp");
+const { check, validationResult } = require("express-validator");
+const Appartment = require("../../models/Appartment");
 //const User = require('../../models/Users');
-const { authenticate, authorize } = require('../../middlewares/auth');
+const { authenticate, authorize } = require("../../middlewares/auth");
 
 //store image upload in a disk
 // const multerStorage = multer.diskStorage({
@@ -32,10 +32,10 @@ const multerStorage = multer.memoryStorage();
 
 //filter for images
 const multerFilters = (req, file, cb) => {
-	if (file.mimetype.startsWith('image')) {
+	if (file.mimetype.startsWith("image")) {
 		cb(null, true);
 	} else {
-		cb(new Error('Not an image'), false);
+		cb(new Error("Not an image"), false);
 	}
 };
 
@@ -43,14 +43,16 @@ const upload = multer({ storage: multerStorage, fileFilter: multerFilters });
 
 // get all appartments
 //working fine
-router.get('/', async (req, res) => {
+router.get("/", async (req, res) => {
 	try {
 		// console.log(req.query);
 		let requestQueryObject = { ...req.query }; //make a copy of the req.query object
 
-		let excludedQueryField = ['sort', 'page', 'pageSize', 'fields']; //define keywords in the req.query that should not be considered while querying the database
+		let excludedQueryField = ["sort", "page", "pageSize", "fields"]; //define keywords in the req.query that should not be considered while querying the database
 
-		excludedQueryField.forEach((element) => delete requestQueryObject[element]); //delete any key in the requestQueryObject containing an element in the  excludedQueryField  array
+		excludedQueryField.forEach(
+			(element) => delete requestQueryObject[element]
+		); //delete any key in the requestQueryObject containing an element in the  excludedQueryField  array
 
 		//advance query using gte,lte,gt,lt
 		let queryToString = JSON.stringify(requestQueryObject);
@@ -60,28 +62,28 @@ router.get('/', async (req, res) => {
 		);
 
 		let query = Appartment.find(JSON.parse(queryToString)).populate({
-			path: 'user',
-			select: '-__v -role -createdAt',
+			path: "user",
+			select: "-__v -role -createdAt",
 		}); // the .select excludes any spacified field before sending the document
 
 		//sorting query result
 		if (req.query.sort) {
 			// to sort pass the sort param ie ?sort="field1,field2,..." //ascending
 			// to sort pass the sort param ie ?sort="-field1,-field2,..." //descending
-			const sortBy = req.query.sort.split(',').join(' ');
+			const sortBy = req.query.sort.split(",").join(" ");
 			query = query.sort(sortBy);
 		} else {
-			query = query.sort('-createdAt');
+			query = query.sort("-createdAt");
 		}
 
 		//field limiting
 		//pass a parameter called field eg. ?fields=field1,field2,... to select the fields you want to see in the returned query
 		if (req.query.fields) {
-			const fields = req.query.fields.split(',').join(' ');
+			const fields = req.query.fields.split(",").join(" ");
 
 			query = query.select(fields);
 		} else {
-			query = query.select('-__v');
+			query = query.select("-__v");
 		}
 
 		//pagination
@@ -97,73 +99,73 @@ router.get('/', async (req, res) => {
 			let numberOfDocument = await Appartment.countDocuments();
 			if (skip >= numberOfDocument) {
 				return res.status(404).json({
-					status: 'failed',
+					status: "failed",
 					result: 0,
-					message: 'This page does not exits',
-					statusCode: 404
+					message: "This page does not exits",
+					statusCode: 404,
 				});
 			}
 		}
 
 		//execute query
 		const appartments = await query; // query.sort().select().skip().limit()
-		console.log("baseURL===",req.baseUrl);
-		console.log("hostname===",req.hostname);
-		console.log("ip===", req.ip)
-		console.log("Response data ===", appartments)
+		console.log("baseURL===", req.baseUrl);
+		console.log("hostname===", req.hostname);
+		console.log("ip===", req.ip);
+		console.log("Response data ===", appartments);
 
 		return res.status(200).json({
-			status: 'success',
+			status: "success",
 			result: appartments.length,
 			appartments,
-			statusCode:200
+			statusCode: 200,
 		});
 	} catch (error) {
-		console.log(`GET Error for /easy-rent/api/v1/appartment`,error);
+		console.log(`GET Error for /easy-rent/api/v1/appartment`, error);
 		return res.status(500).json({
-			status: 'Failed',
+			status: "Failed",
 			error,
-			statusCode:500
+			statusCode: 500,
 		});
 	}
 });
 
 //get single appartment
 //working fine
-router.get('/:id', async (req, res) => {
+router.get("/:id", async (req, res) => {
 	try {
 		let appartment = await Appartment.findById(req.params.id).populate({
-			path: 'user',
-			select: '-__v -role -createdAt',
+			path: "user",
+			select: "-__v -role -createdAt",
 		}); //.populate fill the selected field with its data from the collection where it is referenced
 
 		if (!appartment) {
 			return res.status(404).json({
-				status: 'Failed',
+				status: "Failed",
 				result: 0,
 				message: `No result for the id ${req.params.id}`,
-				statusCode:404
+				statusCode: 404,
 			});
 		}
 
-		console.log("baseURL===",req.baseUrl);
-		console.log("hostname===",req.hostname);
-		console.log("ip===", req.ip)
-		console.log("Response data ===", appartment)
+		console.log("baseURL===", req.baseUrl);
+		console.log("hostname===", req.hostname);
+		console.log("ip===", req.ip);
+		console.log("Response data ===", appartment);
 
 		return res.status(200).json({
-			status: 'success',
+			status: "success",
 			result: appartment.length,
 			data: appartment,
-			statusCode:200
+			statusCode: 200,
 		});
 	} catch (error) {
 		console.log(error);
-		console.log(`GET Error for /easy-rent/api/v1/appartment/:id`,error);
+		console.log(`GET Error for /easy-rent/api/v1/appartment/:id`, error);
 		return res.status(400).json({
-			status: 'Failed',
+			status: "Failed",
 			error,
-			statusCode:400
+			statusCode: 400,
 		});
 	}
 });
@@ -171,14 +173,14 @@ router.get('/:id', async (req, res) => {
 //get all appartment belonging to one user
 //working fine
 router.get(
-	'/user-appartments/my-appartments',
+	"/user-appartments/my-appartments",
 	authenticate,
 	async (req, res) => {
 		try {
 			// console.log(req.query);
 			let requestQueryObject = { ...req.query }; //make a copy of the req.query object
 
-			let excludedQueryField = ['sort', 'page', 'pageSize', 'fields']; //define keywords in the req.query that should not be considered while querying the database
+			let excludedQueryField = ["sort", "page", "pageSize", "fields"]; //define keywords in the req.query that should not be considered while querying the database
 
 			excludedQueryField.forEach(
 				(element) => delete requestQueryObject[element]
@@ -194,28 +196,28 @@ router.get(
 			toFind.userId = req.user.id;
 
 			let query = Appartment.find(toFind).populate({
-				path: 'user',
-				select: '-__v -role -createdAt',
+				path: "user",
+				select: "-__v -role -createdAt",
 			}); // the .select excludes any spacified field before sending the document
 
 			//sorting query result
 			if (req.query.sort) {
 				// to sort pass the sort param ie ?sort="field1,field2,..." //ascending
 				// to sort pass the sort param ie ?sort="-field1,-field2,..." //descending
-				const sortBy = req.query.sort.split(',').join(' ');
+				const sortBy = req.query.sort.split(",").join(" ");
 				query = query.sort(sortBy);
 			} else {
-				query = query.sort('-createdAt');
+				query = query.sort("-createdAt");
 			}
 
 			//field limiting
 			//pass a parameter called field eg. ?fields=field1,field2,... to select the fields you want to see in the returned query
 			if (req.query.fields) {
-				const fields = req.query.fields.split(',').join(' ');
+				const fields = req.query.fields.split(",").join(" ");
 
 				query = query.select(fields);
 			} else {
-				query = query.select('-__v');
+				query = query.select("-__v");
 			}
 
 			//pagination
@@ -231,34 +233,37 @@ router.get(
 				let numberOfDocument = await Appartment.countDocuments();
 				if (skip >= numberOfDocument) {
 					return res.status(404).json({
-						status: 'failed',
+						status: "failed",
 						result: 0,
-						message: 'This page does not exits',
-						statusCode:404
+						message: "This page does not exits",
+						statusCode: 404,
 					});
 				}
 			}
 
 			//execute query
 			const appartments = await query; // query.sort().select().skip().limit()
-			console.log("baseURL===",req.baseUrl);
-			console.log("hostname===",req.hostname);
-			console.log("ip===", req.ip)
-			console.log("Response data ===", appartments)
+			console.log("baseURL===", req.baseUrl);
+			console.log("hostname===", req.hostname);
+			console.log("ip===", req.ip);
+			console.log("Response data ===", appartments);
 
 			return res.status(200).json({
-				status: 'success',
+				status: "success",
 				result: appartments.length,
 				appartments,
-				statusCode:200
+				statusCode: 200,
 			});
 		} catch (error) {
 			console.log(error);
-			console.log(`GET Error for /easy-rent/api/v1/appartment/user-appartments/my-appartments`,error);
+			console.log(
+				`GET Error for /easy-rent/api/v1/appartment/user-appartments/my-appartments`,
+				error
+			);
 			return res.status(400).json({
-				status: 'Failed',
+				status: "Failed",
 				error,
-				statusCode:400
+				statusCode: 400,
 			});
 		}
 	}
@@ -272,26 +277,28 @@ router.get(
 
 //working fine
 router.post(
-	'/',
+	"/",
 	authenticate,
 	[
-		check('houseName', 'houseName is requird').not().notEmpty(),
-		check('houseAddress', 'houseAddress is requird').not().notEmpty(),
-		check('state', 'state is requird').not().notEmpty(),
-		check('LGA', 'LGA is requird').not().notEmpty(),
-		check('price', 'priceRange is requird').not().notEmpty(),
-		check('latitude', 'latitude is requird').not().notEmpty(),
-		check('longitude', 'longitude is requird').not().notEmpty(),
+		check("houseName", "houseName is requird").not().notEmpty(),
+		check("houseAddress", "houseAddress is requird").not().notEmpty(),
+		check("state", "state is requird").not().notEmpty(),
+		check("LGA", "LGA is requird").not().notEmpty(),
+		check("price", "priceRange is requird").not().notEmpty(),
+		check("latitude", "latitude is requird").not().notEmpty(),
+		check("longitude", "longitude is requird").not().notEmpty(),
 	],
 	upload.fields([
-		{ name: 'houseImage', maxCount: 1 },
-		{ name: 'images', maxCount: 3 },
+		{ name: "houseImage", maxCount: 1 },
+		{ name: "images", maxCount: 3 },
 	]),
 	async (req, res) => {
-		console.log("request body", req.body)
+		console.log("request body", req.body);
 		const errors = validationResult(req.body);
 		if (!errors.isEmpty()) {
-			return res.status(400).json({ status: 'Failed', errors: errors.array() });
+			return res
+				.status(400)
+				.json({ status: "Failed", errors: errors.array() });
 		}
 		try {
 			req.body.user = req.user.id;
@@ -303,7 +310,7 @@ router.post(
 
 				await sharp(req.files.houseImage[0].buffer)
 					.resize(2000, 1333)
-					.toFormat('jpeg')
+					.toFormat("jpeg")
 					.jpeg({ quality: 90 })
 					.toFile(`public/house-img/${req.body.houseImage}`);
 
@@ -317,7 +324,7 @@ router.post(
 
 						await sharp(image.buffer)
 							.resize(2000, 1333)
-							.toFormat('jpeg')
+							.toFormat("jpeg")
 							.jpeg({ quality: 90 })
 							.toFile(`public/house-img/${fileName}`);
 
@@ -329,22 +336,22 @@ router.post(
 
 			const newAppartment = await Appartment.create(req.body);
 
-			console.log("baseURL===",req.baseUrl);
-			console.log("hostname===",req.hostname);
-			console.log("ip===", req.ip)
-			console.log("Response data ===", newAppartment)
+			console.log("baseURL===", req.baseUrl);
+			console.log("hostname===", req.hostname);
+			console.log("ip===", req.ip);
+			console.log("Response data ===", newAppartment);
 
 			return res.status(200).json({
-				status: 'success',
+				status: "success",
 				result: newAppartment.length,
 				appartment: newAppartment,
-				statusCode:200
+				statusCode: 200,
 			});
 		} catch (error) {
 			console.log(error);
-			console.log(`POST Error for /easy-rent/api/v1/appartment/`,error);
+			console.log(`POST Error for /easy-rent/api/v1/appartment/`, error);
 			return res.status(400).json({
-				status: 'Failed',
+				status: "Failed",
 				error,
 			});
 		}
@@ -353,7 +360,7 @@ router.post(
 
 //modify an appartment
 //working partially
-router.patch('/:id', authenticate, async (req, res) => {
+router.patch("/:id", authenticate, async (req, res) => {
 	console.log(req.body);
 
 	try {
@@ -361,52 +368,53 @@ router.patch('/:id', authenticate, async (req, res) => {
 			req.params.id,
 			req.body
 		);
-			console.log("baseURL===",req.baseUrl);
-			console.log("hostname===",req.hostname);
-			console.log("ip===", req.ip)
-			console.log("Response data ===", updatedAppartment)
+		console.log("baseURL===", req.baseUrl);
+		console.log("hostname===", req.hostname);
+		console.log("ip===", req.ip);
+		console.log("Response data ===", updatedAppartment);
 
 		return res.status(200).json({
-			status: 'success',
+			status: "success",
 			result: updatedAppartment.length,
 			data: updatedAppartment,
-			statusCode:200
+			statusCode: 200,
 		});
 	} catch (error) {
 		console.log(error);
-		console.log(`PATCH Error for /easy-rent/api/v1/appartment/:id`,error);
+		console.log(`PATCH Error for /easy-rent/api/v1/appartment/:id`, error);
 		return res.status(400).json({
-			status: 'Failed',
+			status: "Failed",
 			error,
-			statusCode:400
+			statusCode: 400,
 		});
 	}
 });
 
 //delete an appartment, , restricted to admins
-router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
-	console.log('apartment delete');
+router.delete("/:id", authenticate, authorize("admin"), async (req, res) => {
+	console.log("apartment delete");
 	try {
 		await Appartment.findByIdAndDelete(req.params.id);
 
-			console.log("baseURL===",req.baseUrl);
-			console.log("hostname===",req.hostname);
-			console.log("ip===", req.ip)
-			
+		console.log("baseURL===", req.baseUrl);
+		console.log("hostname===", req.hostname);
+		console.log("ip===", req.ip);
 
 		return res.status(204).json({
-			status: 'success',
-			message: 'Appartment deleted !',
-			statusCode:204
+			status: "success",
+			message: "Appartment deleted !",
+			statusCode: 204,
 		});
-		
 	} catch (error) {
 		console.log(error);
-		console.log(`DELETE Error for /easy-rent/api/v1/appartment/delete`,error);
+		console.log(
+			`DELETE Error for /easy-rent/api/v1/appartment/delete`,
+			error
+		);
 		return res.status(400).json({
-			status: 'Failed',
+			status: "Failed",
 			error,
-			statusCode:400
+			statusCode: 400,
 		});
 	}
 });
