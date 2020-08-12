@@ -221,7 +221,7 @@ router.post(
 
 					const message = `Dear ${
 						createUser.name.split(" ")[0]
-					}, your Accout with EasyRent has been created successfully`;
+					}, your Account with easyRENT has been created successfully`;
 
 					const mailOptions = {
 						from: "giftedbraintech@gmail.com",
@@ -243,11 +243,9 @@ router.post(
 											</div>
 										</div>
 						
-						<div><p>Welecome ${
-							createUser.name.split(" ")[0]
-						} to GiftedBrainTech Blog</p></div>
-						<div>${message}</div>
-						<div>Login to your account and update your profile so you can start uploading your appartments for rent</div>
+						
+						<div><p>${message}</p></div>
+						<div><p>Login to your account and update your profile so you can start uploading your appartments for rent</p></div>
 				
 						<div>Follow giftedbraintech  on</div>
 									<div style="background-color:#333;text-align:center; padding:10px">
