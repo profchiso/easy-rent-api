@@ -29,11 +29,9 @@ exports.sendEmailWithNodeMailer = async (options) => {
 			// attachments: options.attachments,
 		};
 		transporter.sendMail(mailOptions, (err, resp) => {
-			if (err) {
-				console.log(err);
-			} else {
-				console.log("mail sent-> response", resp);
-			}
+			if (err) console.log(err);
+
+			console.log("mail sent-> response", resp);
 		});
 	} catch (error) {
 		console.log(error);
@@ -75,9 +73,8 @@ exports.sendEmailWithMailgun = async (options) => {
 		};
 
 		await mailgun.messages().send(mailOptions, (error, body) => {
-			if (error) {
-				console.log("mail error", error);
-			}
+			if (error) console.log("mail error", error);
+
 			console.log("mail body", body);
 		});
 	} catch (error) {
