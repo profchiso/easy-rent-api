@@ -32,7 +32,7 @@ exports.sendEmailWithNodeMailer = async (options) => {
 			if (err) {
 				console.log(err);
 			} else {
-				console.log('mail sent');
+				console.log('mail sent-> response', resp);
 			}
 		});
 	} catch (error) {

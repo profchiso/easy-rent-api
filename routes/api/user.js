@@ -91,6 +91,11 @@ router.get(
 			//execute query
 			const users = await query; // query.sort().select().skip().limit()
 
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			console.log("Response data ===", users)
+
 			return res.status(200).json({
 				status: 'success',
 				result: users.length,
@@ -98,6 +103,7 @@ router.get(
 				statusCode: 200,
 			});
 		} catch (error) {
+			console.log(`GET Error for /easy-rent/api/v1/users/`,error);
 			console.log(error);
 			return res.status(400).json({
 				status: 'Failed',
@@ -122,12 +128,17 @@ router.get(
 				apiError.statusCode = 404;
 				return res.status(404).json(apiError);
 			}
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			console.log("Response data ===", user)
 			return res.status(200).json({
 				status: 'success',
 				user,
 				statusCode: 200,
 			});
 		} catch (error) {
+			console.log(`GET Error for /easy-rent/api/v1/users/:id`,error);
 			console.log(error);
 			return res.status(400).json({
 				status: 'failed',
@@ -151,6 +162,7 @@ router.post(
 		check('confirmPassword', 'confirmPassword required').notEmpty(),
 	],
 	async (req, res) => {
+		console.log("Sign up request body", req.body)
 		const errors = validationResult(req.body);
 
 		if (!errors.isEmpty()) {
@@ -281,6 +293,11 @@ router.post(
 					};
 
 					await sendEmailWithNodeMailer(mailOptions);
+
+					console.log("baseURL===",req.baseUrl);
+					console.log("hostname===",req.hostname);
+					console.log("ip===", req.ip)
+					console.log("Response data ===", createUser)
 
 					return res.status(201).json({
 						status: 'success',
@@ -482,6 +499,7 @@ router.post(
 	],
 
 	async (req, res) => {
+		console.log("login req body===", req.body)
 		const errors = validationResult(req.body); // pass req.body for form data validation but for json, just pass req;
 		const apiError = {};
 		if (!errors.isEmpty()) {
@@ -525,7 +543,10 @@ router.post(
 					httpOnly: true,
 					// secure: req.secure || req.headers('x-forwarded-proto') === 'https' //used only in production
 				});
-
+					console.log("baseURL===",req.baseUrl);
+					console.log("hostname===",req.hostname);
+					console.log("ip===", req.ip)
+					console.log("Response data ===", user)
 				//end of code to send token as cookie
 				return res.status(200).json({
 					status: 'success',
@@ -648,6 +669,10 @@ router.post('/forgot-password', async (req, res) => {
 			await sendEmailWithNodeMailer(mailOptions);
 
 			//send route response
+					console.log("baseURL===",req.baseUrl);
+					console.log("hostname===",req.hostname);
+					console.log("ip===", req.ip)
+					//console.log("Response data ===", user)
 			return res.status(200).json({
 				status: 'success',
 				errMessage: `A password reset token has ben sent to your email address  ${user.email}`,
@@ -711,6 +736,10 @@ router.patch('/reset-password/:token', async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
+					console.log("baseURL===",req.baseUrl);
+					console.log("hostname===",req.hostname);
+					console.log("ip===", req.ip)
+					console.log("Response data ===", token)
 			return res.status(200).json({
 				status: 'success',
 				token,
@@ -733,6 +762,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 router.patch('/update-password', authenticate, async (req, res) => {
 	//get the submitted password
 	const { oldPassword, newPassword, newConfirmPassword } = req.body;
+	console.log("request body update password===", req.body)
 	const apiError = {};
 	try {
 		//get the user from the user collection
@@ -773,6 +803,10 @@ router.patch('/update-password', authenticate, async (req, res) => {
 		};
 		jwt.sign(payLoad, JWT_SECRET, { expiresIn: 3600 }, (error, token) => {
 			if (error) throw error;
+					console.log("baseURL===",req.baseUrl);
+					console.log("hostname===",req.hostname);
+					console.log("ip===", req.ip)
+					console.log("Response data ===", token)
 			return res.status(200).json({
 				status: 'success',
 				token,

@@ -13,7 +13,6 @@ const bodyParser = require('body-parser');
 const connectToDB = require('./controllers/dbController');
 const userRoute = require('./routes/api/user');
 const appartmentRoute = require('./routes/api/appartment');
-
 const undefinedRoutes = require('./routes/api/404-routes');
 
 connectToDB(); //function to connect to database
@@ -63,6 +62,7 @@ app.use('/easy-rent/api/v1/appartment', appartmentRoute); //appartment route
 //catch undefined endpoints
 app.use(undefinedRoutes);
 
+//spin up the server on the env port number
 app.listen(PORT, () => {
 	console.log(`Server started on port ${PORT}`);
 });

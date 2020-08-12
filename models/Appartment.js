@@ -51,6 +51,11 @@ const appartmentSchema = new mongoose.Schema({
 		type: Boolean,
 		default: false,
 	},
+	subscriptionType:{
+		type: String,
+		default: "basic",
+		
+	}
 });
 
 //pre middleware to populate the user field from the user collection

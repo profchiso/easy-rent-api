@@ -107,6 +107,10 @@ router.get('/', async (req, res) => {
 
 		//execute query
 		const appartments = await query; // query.sort().select().skip().limit()
+		console.log("baseURL===",req.baseUrl);
+		console.log("hostname===",req.hostname);
+		console.log("ip===", req.ip)
+		console.log("Response data ===", appartments)
 
 		return res.status(200).json({
 			status: 'success',
@@ -115,7 +119,7 @@ router.get('/', async (req, res) => {
 			statusCode:200
 		});
 	} catch (error) {
-		console.log(error);
+		console.log(`GET Error for /easy-rent/api/v1/appartment`,error);
 		return res.status(500).json({
 			status: 'Failed',
 			error,
@@ -142,6 +146,11 @@ router.get('/:id', async (req, res) => {
 			});
 		}
 
+		console.log("baseURL===",req.baseUrl);
+		console.log("hostname===",req.hostname);
+		console.log("ip===", req.ip)
+		console.log("Response data ===", appartment)
+
 		return res.status(200).json({
 			status: 'success',
 			result: appartment.length,
@@ -150,6 +159,7 @@ router.get('/:id', async (req, res) => {
 		});
 	} catch (error) {
 		console.log(error);
+		console.log(`GET Error for /easy-rent/api/v1/appartment/:id`,error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,
@@ -231,6 +241,10 @@ router.get(
 
 			//execute query
 			const appartments = await query; // query.sort().select().skip().limit()
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			console.log("Response data ===", appartments)
 
 			return res.status(200).json({
 				status: 'success',
@@ -240,6 +254,7 @@ router.get(
 			});
 		} catch (error) {
 			console.log(error);
+			console.log(`GET Error for /easy-rent/api/v1/appartment/user-appartments/my-appartments`,error);
 			return res.status(400).json({
 				status: 'Failed',
 				error,
@@ -273,6 +288,7 @@ router.post(
 		{ name: 'images', maxCount: 3 },
 	]),
 	async (req, res) => {
+		console.log("request body", req.body)
 		const errors = validationResult(req.body);
 		if (!errors.isEmpty()) {
 			return res.status(400).json({ status: 'Failed', errors: errors.array() });
@@ -313,6 +329,11 @@ router.post(
 
 			const newAppartment = await Appartment.create(req.body);
 
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			console.log("Response data ===", newAppartment)
+
 			return res.status(200).json({
 				status: 'success',
 				result: newAppartment.length,
@@ -321,6 +342,7 @@ router.post(
 			});
 		} catch (error) {
 			console.log(error);
+			console.log(`POST Error for /easy-rent/api/v1/appartment/`,error);
 			return res.status(400).json({
 				status: 'Failed',
 				error,
@@ -339,6 +361,10 @@ router.patch('/:id', authenticate, async (req, res) => {
 			req.params.id,
 			req.body
 		);
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			console.log("Response data ===", updatedAppartment)
 
 		return res.status(200).json({
 			status: 'success',
@@ -348,6 +374,7 @@ router.patch('/:id', authenticate, async (req, res) => {
 		});
 	} catch (error) {
 		console.log(error);
+		console.log(`PATCH Error for /easy-rent/api/v1/appartment/:id`,error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,
@@ -358,17 +385,24 @@ router.patch('/:id', authenticate, async (req, res) => {
 
 //delete an appartment, , restricted to admins
 router.delete('/:id', authenticate, authorize('admin'), async (req, res) => {
-	console.log('appment delete');
+	console.log('apartment delete');
 	try {
 		await Appartment.findByIdAndDelete(req.params.id);
+
+			console.log("baseURL===",req.baseUrl);
+			console.log("hostname===",req.hostname);
+			console.log("ip===", req.ip)
+			
 
 		return res.status(204).json({
 			status: 'success',
 			message: 'Appartment deleted !',
 			statusCode:204
 		});
+		
 	} catch (error) {
 		console.log(error);
+		console.log(`DELETE Error for /easy-rent/api/v1/appartment/delete`,error);
 		return res.status(400).json({
 			status: 'Failed',
 			error,

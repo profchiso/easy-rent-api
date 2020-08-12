@@ -46,6 +46,8 @@ exports.authenticate = async (req, res, next) => {
 
 		//Allow access to protected route
 		req.user = user;
+		console.log("Authentication response===", res)
+		console.log("Authentication  request===", req)
 
 		next();
 	} catch (error) {
@@ -59,15 +61,19 @@ exports.authenticate = async (req, res, next) => {
 };
 
 exports.authorize = (...roles) => {
+	console.log("Authorized role", roles);
 	const apiError = {};
 	return (req, res, next) => {
+
 		if (!roles.includes(req.user.role)) {
-			apiError.errMessage = `Sorry you are not allowed to carry out this operation`;
+			apiError.errMessage = `Sorry you are fobidden to carry out this operation`;
 			apiError.statusCode = 403;
 			apiError.status = 'Failed';
 			return res.status(403).json(apiError);
 		}
 		//user is authorized
+		console.log("Authorization response", res)
+		console.log("Authorization request", req)
 		next();
 	};
 };
