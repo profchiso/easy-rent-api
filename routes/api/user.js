@@ -15,10 +15,10 @@ const { authenticate, authorize } = require('../../middlewares/auth');
 const JWT_SECRET = process.env.JWT_SECRET;
 //middleware  to limit the number of request per hour from any IP address
 const limiter = rateLimit({
-	max: 10, //max no of request per IP in the specified time
+	max: 15, //max no of request per IP in the specified time
 	windowMs: 60 * 60 * 1000, //time allowed for the num of request(1h)
 	message:
-		'Maximum allowed login request in an hour exceeded, please try again in an hour time or try resetting your password', //
+		'Maximum allowed login request in an hour exceeded, please try again later or try resetting your password', //
 });
 
 // get all users , restricted to admins and developers users
@@ -568,7 +568,7 @@ router.post(
 
 //send reset password link route
 //working fine
-router.post('/forgot-password', async (req, res) => {
+router.post('/forgot-password',limiter, async (req, res) => {
 	try {
 		const { email } = req.body;
 		const apiError = {};
@@ -701,7 +701,7 @@ router.post('/forgot-password', async (req, res) => {
 
 //reset password route
 //working fine
-router.patch('/reset-password/:token', async (req, res) => {
+router.patch('/reset-password/:token',limiter, async (req, res) => {
 	try {
 		//get user base on the reset password token sent to their mail
 		const { token } = req.params;
@@ -759,7 +759,7 @@ router.patch('/reset-password/:token', async (req, res) => {
 
 //normal update password route
 //working fine
-router.patch('/update-password', authenticate, async (req, res) => {
+router.patch('/update-password',limiter, authenticate, async (req, res) => {
 	//get the submitted password
 	const { oldPassword, newPassword, newConfirmPassword } = req.body;
 	console.log("request body update password===", req.body)
@@ -825,7 +825,7 @@ router.patch('/update-password', authenticate, async (req, res) => {
 
 //update other user data by user
 //working fine
-router.patch('/update-me', authenticate, async (req, res) => {
+router.patch('/update-me', authenticate,limiter, async (req, res) => {
 	try {
 		//find the user
 		//formal implementation
@@ -883,7 +883,7 @@ router.patch('/update-me', authenticate, async (req, res) => {
 
 //modify user accout by user
 //working fine
-router.patch('/:id', authenticate, async (req, res) => {
+router.patch('/:id', authenticate,limiter, async (req, res) => {
 	try {
 		let updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, {
 			new: true,

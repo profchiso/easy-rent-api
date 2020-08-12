@@ -31,7 +31,7 @@ const limiter = rateLimit({
 	max: 300, //max no of request per IP in the specified time
 	windowMs: 60 * 60 * 1000, //time allowed for the num of request
 	message:
-		'Maximum allowed request  for an IP in an hour exceeded, please try again in an hour time', //
+		'Maximum allowed request  for an IP in an hour exceeded, please try again later', //
 });
 app.use('/easy-rent/api/', limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
 app.use(express.json({ extended: false })); //middleware for body-paser
