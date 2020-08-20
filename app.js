@@ -35,7 +35,7 @@ const limiter = rateLimit({
 });
 app.use("/easy-rent/api/", limiter); //sends statusCode 429 which means too many request when limit is exceeded, always used to curb brute-force attack
 app.use(express.json({ extended: false })); //middleware for body-paser
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 app.use(cors()); //middle ware to allow cross origin resource sharing
 
@@ -56,7 +56,7 @@ app.get("/", (req, res) => {
 	res.status(200).send("welcome to easy rent api");
 });
 app.use("/easy-rent/api/v1/users", userRoute); //users route
-app.use("/easy-rent/api/v1/appartment", appartmentRoute); //appartment route
+app.use("/easy-rent/api/v1/appartments", appartmentRoute); //appartment route
 // app.use('/easy-rent/api/v1/auth', authRoute);
 
 //catch undefined endpoints

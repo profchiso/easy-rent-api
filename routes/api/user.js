@@ -128,7 +128,7 @@ router.get(
 				apiError.statusCode = 404;
 				return res.status(404).json(apiError);
 			}
-			console.log("baseURL===", req.baseUrl);
+			console.log("baseURL===", req.url);
 			console.log("hostname===", req.hostname);
 			console.log("ip===", req.ip);
 			console.log("Response data ===", user);
@@ -296,7 +296,7 @@ router.post(
 
 					await sendEmailWithNodeMailer(mailOptions);
 
-					console.log("baseURL===", req.baseUrl);
+					console.log("baseURL===", req.url);
 					console.log("hostname===", req.hostname);
 					console.log("ip===", req.ip);
 					console.log("Response data ===", createUser);

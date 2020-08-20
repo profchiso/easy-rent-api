@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 
 router.all("*", (req, res) => {
-	console.log("baseURL===", req.baseUrl);
+	console.log("baseURL===", req.url);
 	console.log("hostname===", req.hostname);
 	console.log("ip===", req.ip);
 
